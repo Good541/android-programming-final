@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Home</title>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js" integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf" crossorigin="anonymous"></script>
+    
+    <!-- Font Awesome -->
+    <link
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css"
+    rel="stylesheet"
+    />
+    <!-- Google Fonts -->
+    <link
+    href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
+    rel="stylesheet"
+    />
+    <!-- MDB -->
+    <link
+    href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/3.3.0/mdb.min.css"
+    rel="stylesheet"
+    />
+    <script
+    type="text/javascript"
+    src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/3.3.0/mdb.min.js"
+    ></script>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#"></a>
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-mdb-toggle="collapse"
+        data-mdb-target="#navbarNav"
+        aria-controls="navbarNav"
+        aria-expanded="false"
+        aria-label="Toggle navigation"
+      >
+        <i class="fas fa-bars"></i>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link active" aria-current="page" href="/">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/api/prediction">Prediction API</a>
+          </li>
+          <li class="nav-item d-lg-none">
+            <a class="nav-link" href="/login">Login</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div class="container-fluid justify-content-end">
+      <a class="btn btn-dark me-2 d-none d-lg-block" type="button" href="/login"><i class="fa fa-user" aria-hidden="true"></i>  Login</a>
+    </div>
+  </nav>
+
+  <div class="container h-100 d-flex justify-content-center">
+
+    <div class="jumbotron my-auto">
+      <div class="d-flex justify-content-center">
+        <h1>Welcome! {{username}}</h1>
+      </div>
+      <br><br>
+      <div class="row vertical-center-row">
+        <div class="col-sm">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title"><i class="fa fa-user" aria-hidden="true"></i> Login</h5>
+              <p class="card-text">Login with your authorized account.</p>
+              <div class="d-none d-md-block"><br></div>
+              <div class="row justify-content-center">
+                <a href="/login" class="btn btn-primary justify-content-center">Login</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title"><i class="fas fa-chart-line"></i> Prediction API</h5>
+              <p class="card-text">Use ours API for predict your health insurance claim data.</p>
+              <div class="row justify-content-center">
+                <a href="/api/prediction" class="btn btn-primary justify-content-center">Get started</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+
+<style type="text/css">
+  html, body {
+      height: 90%;
+  }
+</style>

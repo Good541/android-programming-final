@@ -1,0 +1,86 @@
+{
+    "openapi": "3.0.0",
+    "tags": [
+      {
+        "name": "Prediction Request",
+        "description": "Example API for requesting and return prediction requests"
+      }
+    ],
+    "paths": {
+      "/api/prediction": {
+        "get": {
+          "tags": [
+            "Prediction Request"
+          ],
+          "summary": "Returns API Documentation page",
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        },
+        "post": {
+          "tags": [
+            "Prediction Request"
+          ],
+          "summary": "Prediction your data",
+          "requestBody": {
+            "description": "Prediction Post JSON Object",
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/predictionRequestPostBody"
+                }
+              }
+            }
+          },
+          "produces": [
+            "application/json"
+          ],
+          "responses": {
+            "201": {
+              "description": "OK"
+            },
+            "400": {
+              "description": "Failed. Bad post data."
+            }
+          }
+        }
+      }
+    },
+    "components": {
+      "schemas": {
+        "predictionRequestPostBody": {
+          "type": "object",
+          "properties": {
+            "claim_type":{
+              "type": "integer",
+              "format": "int64",
+              "example": 1
+            },
+            "claim_category":{
+              "type": "integer",
+              "format": "int64",
+              "example": 0
+            },
+            "hospital_type":{
+              "type": "integer",
+              "format": "int64",
+              "example": 0
+            },
+            "icd10":{
+              "type": "integer",
+              "format": "int64",
+              "example": 5
+            },
+            "present_amount":{
+              "type": "integer",
+              "format": "int64",
+              "example": 3000
+            }
+          }
+        }
+      }
+    }
+  }
