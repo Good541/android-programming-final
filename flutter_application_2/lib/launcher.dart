@@ -4,6 +4,7 @@ import 'home.dart';
 import 'add.dart';
 import 'profile.dart';
 import 'schedule.dart';
+import 'lcanime.dart';
  
 class Launcher extends StatefulWidget {
     static const routeName = '/';
@@ -19,6 +20,7 @@ class _LauncherState extends State<Launcher> {
     List<Widget> _pageWidget = <Widget>[
         Home(),
         Add(),
+        LicensedAnime(),
         Schedule(),
         Profile(),
     ];
@@ -31,6 +33,10 @@ class _LauncherState extends State<Launcher> {
         BottomNavigationBarItem(
             icon: Icon(FontAwesomeIcons.plusSquare),
             title: Text('Add anime'),
+        ),
+        BottomNavigationBarItem(
+            icon: Icon(FontAwesomeIcons.info),
+            title: Text('Licensed anime'),
         ),
         BottomNavigationBarItem(
             icon: Icon(FontAwesomeIcons.calendarAlt),

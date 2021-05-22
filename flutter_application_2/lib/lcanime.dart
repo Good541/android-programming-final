@@ -7,16 +7,16 @@ import 'package:http/http.dart' as http;
 import 'package:requests/requests.dart';
 import 'animedetail.dart';
 
-class Add extends StatefulWidget {
-  static const routeName = '/add';
+class LicensedAnime extends StatefulWidget {
+  static const routeName = '/lcinfo';
 
   @override
   State<StatefulWidget> createState() {
-    return _AddState();
+    return _LicensedAnimeState();
   }
 }
 
-class _AddState extends State<Add> {
+class _LicensedAnimeState extends State<LicensedAnime> {
   TextEditingController _searchQueryController = TextEditingController();
   bool _isSearching = false;
   String searchQuery = "Search query";
@@ -27,8 +27,10 @@ class _AddState extends State<Add> {
   var mediaformat = ['TV', 'TV_SHORT', 'MOVIE', 'SPECIAL', 'OVA', 'ONA'];
   List mediaStatus = ['FINISHED', 'RELEASING', 'NOT_YET_RELEASED'];
   List mediaSeson = ['WINTER', 'SPRING', 'SUMMER', 'FALL'];
+  List streamingService = ['musethyt', 'anioneyt', 'bilibili', 'aislay', 'flixer', 'iqiyi', 'netflix', 'iqiyi', 'trueid', 'pops', 'linetv', 'amazon', 'iflix'];
   int fetchPage;
   String queryState = "initdata";
+  List lcAnimeList;
 
   List currentFilter;
   Widget _buildSearchField() {
@@ -95,7 +97,7 @@ class _AddState extends State<Add> {
   void updateSearchQuery(String newQuery) {
     setState(() {
       searchQuery = newQuery;
-      queryData();
+      //queryData();
       debugPrint('updateSearchQuery');
     });
   }
@@ -106,7 +108,7 @@ class _AddState extends State<Add> {
     setState(() {
       _isSearching = false;
       queryState = "initdata";
-      initData();
+      getLcAnime();
       debugPrint('_stopSearching');
     });
   }
@@ -119,665 +121,140 @@ class _AddState extends State<Add> {
     });
   }
 
-  initData() async {
+  getLcAnime() async{
     fetchPage = 1;
+    _loading = true;
     queryState = "initData";
-    currentFilter = [null, null, thisSeason(DateTime.now()), DateTime.now().year] ;
-    _loading = true;
-    animeList = new List();
-    final url = Uri.parse('https://graphql.anilist.co');
-    Map<String, String> headers = {"Content-type": "application/json"};
-      Map variables = {
-        'season': thisSeason(DateTime.now()),
-        'seasonYear': DateTime.now().year,
-        'page': 1,
-        'perPage': 20,
-        'isAdult': false,
-        'countryOfOrigin': 'JP',
-        'format_in': mediaformat
-      };
-      //print(variables.toString());
-      String query =
-          '''query (\$id: Int, \$page: Int, \$perPage: Int, \$season: MediaSeason, \$seasonYear:Int, \$isAdult:Boolean, \$countryOfOrigin:CountryCode, \$format_in:[MediaFormat]) {
-                    Page (page: \$page, perPage: \$perPage) {
-                        pageInfo {
-                            total
-                            currentPage
-                            lastPage
-                            hasNextPage
-                            perPage
-                        }
-                        media (id: \$id, season: \$season, seasonYear:\$seasonYear, isAdult:\$isAdult, countryOfOrigin:\$countryOfOrigin, format_in:\$format_in, type: ANIME) {
-                            id
-                            idMal
-                            episodes
-                            title {
-                                romaji
-                            }
-                            startDate{
-                              month
-                            }
-                            coverImage{
-                              extraLarge
-                            }
-                            format
-                            countryOfOrigin
-                        }
-                    }
-                }''';
-      var json = {'query': query, 'variables': variables};
-      debugPrint(jsonEncode(json));
-      // make POST request
-      var client = http.Client();
-      var response =
-          await client.post(url, headers: headers, body: jsonEncode(json));
-      // check the status code for the result
-      if (this.mounted) {
-        this.setState(() {
-          searchList = jsonDecode(response.body);
-          var media = searchList['data']['Page']['media'];
-          for (var str in media) {
-
-              animeList.add([
-                str['id'],
-                str['title']['romaji'],
-                str['episodes'],
-                str['idMal'],
-                str['coverImage']['extraLarge']
-              ]);
-            
-          }
-        });
-      }
-      // searchList = jsonDecode(response.body);
-      // List<String> anime = new List();
-      // print(page.toString());
-      // page = 1;
-      client.close();
-    
-
-    // for (String i in animeList){
-    //   debugPrint(i);
-
-    // }
-    // for(int i=0; i<animeList.length; i++){
-    //   print(animeList[i][0]);
-    //   print(animeList[i][1]);
-    // }
-    if (animeList.length < 20) {
-      amountListView = animeList.length;
-    } else {
-      amountListView = 20;
-    }
-    _loading = false;
-  }
-
-  nextInitData(page) async {
-    currentFilter = [null, null, thisSeason(DateTime.now()), DateTime.now().year];
-    _loading = true;
-    final url = Uri.parse('https://graphql.anilist.co');
-    Map<String, String> headers = {"Content-type": "application/json"};
-      Map variables = {
-        'season': currentFilter[2],
-        'seasonYear':currentFilter[3],
-        'page': page,
-        'perPage': 20,
-        'isAdult': false,
-        'countryOfOrigin': 'JP',
-        'format_in': mediaformat
-      };
-      //print(variables.toString());
-      String query =
-          '''query (\$id: Int, \$page: Int, \$perPage: Int, \$season: MediaSeason, \$seasonYear:Int, \$isAdult:Boolean, \$countryOfOrigin:CountryCode, \$format_in:[MediaFormat]) {
-                    Page (page: \$page, perPage: \$perPage) {
-                        pageInfo {
-                            total
-                            currentPage
-                            lastPage
-                            hasNextPage
-                            perPage
-                        }
-                        media (id: \$id, season: \$season, seasonYear:\$seasonYear, isAdult:\$isAdult, countryOfOrigin:\$countryOfOrigin, format_in:\$format_in, type: ANIME) {
-                            id
-                            idMal
-                            episodes
-                            title {
-                                romaji
-                            }
-                            startDate{
-                              month
-                            }
-                            coverImage{
-                              extraLarge
-                            }
-                            format
-                            countryOfOrigin
-                        }
-                    }
-                }''';
-      var json = {'query': query, 'variables': variables};
-      debugPrint(jsonEncode(json));
-      // make POST request
-      var client = http.Client();
-      var response =
-          await client.post(url, headers: headers, body: jsonEncode(json));
-      // check the status code for the result
-      if (this.mounted) {
-        this.setState(() {
-          searchList = jsonDecode(response.body);
-          var media = searchList['data']['Page']['media'];
-          for (var str in media) {
-
-              animeList.add([
-                str['id'],
-                str['title']['romaji'],
-                str['episodes'],
-                str['idMal'],
-                str['coverImage']['extraLarge']
-              ]);
-            
-          }
-          page = searchList['data']['Page']['pageInfo']['lastPage'];
-        });
-      }
-      // searchList = jsonDecode(response.body);
-      // List<String> anime = new List();
-      // print(page.toString());
-      // page = 1;
-      client.close();
-
-    // for (String i in animeList){
-    //   debugPrint(i);
-
-    // }
-    // for(int i=0; i<animeList.length; i++){
-    //   print(animeList[i][0]);
-    //   print(animeList[i][1]);
-    // }
-    setState(() {
-      // if (animeList.length < 20) {
-      //   amountListView = amountListView + animeList.length;
-      // } else {
-      //   amountListView = amountListView + 20;
-      // }
-      amountListView = animeList.length;
-    });
-    _loading = false;
-  }
-
-  queryData() async {
-    queryState = "queryData";
-    fetchPage = 1;
-    _loading = true;
-    //print("querydata--------------");
-    animeList = new List();
-    final url = Uri.parse('https://graphql.anilist.co');
-    Map<String, String> headers = {"Content-type": "application/json"};
-      Map variables = {
-        'search': searchQuery,
-        'page': fetchPage,
-        'perPage': 20,
-        'isAdult': false,
-        'countryOfOrigin': 'JP',
-        'format_in': mediaformat
-      };
-      String query =
-          '''query (\$page: Int, \$perPage: Int, \$search: String, \$isAdult:Boolean, \$countryOfOrigin:CountryCode, \$format_in:[MediaFormat]) {
-                    Page (page: \$page, perPage: \$perPage) {
-                        pageInfo {
-                            total
-                            currentPage
-                            lastPage
-                            hasNextPage
-                            perPage
-                        }
-                        media (search:\$search, isAdult:\$isAdult, countryOfOrigin:\$countryOfOrigin, format_in:\$format_in, type: ANIME) {
-                            id
-                            idMal
-                            episodes
-                            title {
-                                romaji
-                            }
-                            startDate{
-                              month
-                            }
-                            coverImage{
-                              extraLarge
-                            }
-                            format
-                        }
-                    }
-                }''';
-      var json = {'query': query, 'variables': variables};
-      //debugPrint(jsonEncode(json));
-      var client = http.Client();
-      // make POST request
-      var response =
-          await client.post(url, headers: headers, body: jsonEncode(json));
-      // check the status code for the result
-      if (this.mounted) {
-        this.setState(() {
-          searchList = jsonDecode(response.body);
-          //print(searchList);
-          if (searchList['data'] != null) {
-            var media = searchList['data']['Page']['media'];
-            for (var str in media) {
-              //debugPrint(str['title']['romaji']);
-              if (mediaformat.contains(str['format'])) {
-                animeList.add([
-                  str['id'],
-                  str['title']['romaji'],
-                  str['episodes'],
-                  str['idMal'],
-                  str['coverImage']['extraLarge']
-                ]);
-              }
-            }
-          } else {
+    lcAnimeList = new List();
+    var json = {"page": 1, "perPage": 20};
+    var r = await Requests.post('http://shirakami.trueddns.com:60181/getlclist', json: json);
+    //var r = await Requests.post('http://192.168.1.57:8000/deleteanimelist', json: json);
+    r.raiseForStatus();
+    String rs1 = r.content();
+    if (rs1 == "Page ended"){
+      this.setState(() {
+          _loading = false;
         }
+      );
+      return;
+    }
+    if (this.mounted) {
+      this.setState(() {
+        var resp = jsonDecode(rs1);
+        //print(resp.toString());
+        for (var str in resp) {
+          //debugPrint(str['title']['romaji']);
+          lcAnimeList.add(str);
+        }
+        amountListView = lcAnimeList.length;
+        
       });
     }
-    client.close();
-
-    setState(() {
-      // if (animeList.length < 20) {
-      //   amountListView = amountListView + animeList.length;
-      // } else {
-      //   amountListView = amountListView + 20;
-      // }
-      amountListView = animeList.length;
-    });
     _loading = false;
+    
   }
 
-  nextQueryData(page) async {
+  getNextLcAnime() async{
     _loading = true;
-    //print("querydata--------------");
-    final url = Uri.parse('https://graphql.anilist.co');
-    Map<String, String> headers = {"Content-type": "application/json"};
-      Map variables = {
-        'search': searchQuery,
-        'page': page,
-        'perPage': 20,
-        'isAdult': false,
-        'countryOfOrigin': 'JP',
-        'format_in': mediaformat
-      };
-      String query =
-          '''query (\$page: Int, \$perPage: Int, \$search: String, \$isAdult:Boolean, \$countryOfOrigin:CountryCode, \$format_in:[MediaFormat]) {
-                    Page (page: \$page, perPage: \$perPage) {
-                        pageInfo {
-                            total
-                            currentPage
-                            lastPage
-                            hasNextPage
-                            perPage
-                        }
-                        media (search:\$search, isAdult:\$isAdult, countryOfOrigin:\$countryOfOrigin, format_in:\$format_in type: ANIME) {
-                            id
-                            idMal
-                            episodes
-                            title {
-                                romaji
-                            }
-                            startDate{
-                              month
-                            }
-                            coverImage{
-                              extraLarge
-                            }
-                            format
-                        }
-                    }
-                }''';
-      var json = {'query': query, 'variables': variables};
-      //debugPrint(jsonEncode(json));
-      var client = http.Client();
-      // make POST request
-      var response =
-          await client.post(url, headers: headers, body: jsonEncode(json));
-      // check the status code for the result
-      if (this.mounted) {
-        this.setState(() {
-          searchList = jsonDecode(response.body);
-          //print(searchList);
-          if (searchList['data'] != null) {
-            var media = searchList['data']['Page']['media'];
-            for (var str in media) {
-              //debugPrint(str['title']['romaji']);
-              if (mediaformat.contains(str['format'])) {
-                animeList.add([
-                  str['id'],
-                  str['title']['romaji'],
-                  str['episodes'],
-                  str['idMal'],
-                  str['coverImage']['extraLarge']
-                ]);
-              }
-            }
-            page = searchList['data']['Page']['pageInfo']['lastPage'];
-          } else {
-            page = 1;
-          }
-        });
-      }
-      client.close();
-      // searchList = jsonDecode(response.body);
-      // List<String> anime = new List();
-      // print(page.toString());
-      // page = 1;
-
-
-    // for (String i in animeList){
-    //   debugPrint(i);
-
-    // }
-    // for(int i=0; i<animeList.length; i++){
-    //   print(animeList[i][0]);
-    //   print(animeList[i][1]);
-    // }
-
-    setState(() {
-      // if (animeList.length < 20) {
-      //   amountListView = amountListView + animeList.length;
-      // } else {
-      //   amountListView = amountListView + 20;
-      // }
-      amountListView = animeList.length;
-    });
+    queryState = "initData";
+    var json = {"page": fetchPage, "perPage": 20};
+    var r = await Requests.post('http://shirakami.trueddns.com:60181/getlclist', json: json);
+    //var r = await Requests.post('http://192.168.1.57:8000/deleteanimelist', json: json);
+    r.raiseForStatus();
+    String rs1 = r.content();
+    //print(rs1);
+    if (rs1 == "Page ended"){
+      this.setState(() {
+          _loading = false;
+        }
+      );
+      return;
+    }
+    if (this.mounted) {
+      this.setState(() {
+        var resp = jsonDecode(rs1);
+        //print(resp.toString());
+        for (var str in resp) {
+          //debugPrint(str['title']['romaji']);
+          lcAnimeList.add(str);
+        }
+        amountListView = lcAnimeList.length;
+      });
+    }
+    
     _loading = false;
   }
 
-  filterQueryData(statusIndex, typeIndex, seasonReleaseIndex, yearRelease) async {
+  filterLcAnime(licensor, streamingServiceIndex, season, year, format) async{
+    _loading = true;
     fetchPage = 1;
     queryState = "filterData";
-    currentFilter = [statusIndex, typeIndex, seasonReleaseIndex, yearRelease];
-    _loading = true;
-    //print("querydata--------------");
-    animeList = new List();
-    final url = Uri.parse('https://graphql.anilist.co');
-    Map<String, String> headers = {"Content-type": "application/json"};
-      Map variables = {
-        'page': fetchPage,
-        'perPage': 20,
-        'isAdult': false
-      };
-      String filterQueryStr = '''''';
-      String filterMediaStr = '''''';
-      if (statusIndex != null) {
-        variables['status'] = mediaStatus[_dropDownAiringStatusIndex];
-        filterQueryStr = filterQueryStr+''',\$status:MediaStatus''';
-        filterMediaStr = filterMediaStr+''',status:\$status''';
-      }
-      if (typeIndex != null) {
-        variables['format'] = mediaformat[typeIndex];
-        filterQueryStr = filterQueryStr+''',\$format:MediaFormat''';
-        filterMediaStr = filterMediaStr+''',format:\$format''';
-      }
-      else if(typeIndex == null){
-        variables['format_in'] = mediaformat;
-        filterQueryStr = filterQueryStr+''',\$format_in:[MediaFormat]''';
-        filterMediaStr = filterMediaStr+''',format_in:\$format_in''';
-      }
-      if (_dropDownSeasonReleaseIndex != null) {
-        variables['season'] = mediaSeson[_dropDownSeasonReleaseIndex];
-        filterQueryStr = filterQueryStr+''',\$season:MediaSeason''';
-        filterMediaStr = filterMediaStr+''',season:\$season''';
-      }
-      if (yearRelease != null) {
-        variables['seasonYear'] = yearRelease;
-        filterQueryStr = filterQueryStr+''',\$seasonYear:Int''';
-        filterMediaStr = filterMediaStr+''',seasonYear:\$seasonYear''';
-      }
-      if(filterMediaStr.length == 0 || filterQueryStr.length == 0){
-        return "You must select at least 1 filter";
-      }
-      String query =
-          '''query (\$page: Int, \$perPage: Int, \$isAdult:Boolean '''+filterQueryStr+''') {
-                    Page (page: \$page, perPage: \$perPage) {
-                        pageInfo {
-                            total
-                            currentPage
-                            lastPage
-                            hasNextPage
-                            perPage
-                        }
-                        media (isAdult:\$isAdult, type: ANIME'''+filterMediaStr+''') {
-                            id
-                            idMal
-                            episodes
-                            title {
-                                romaji
-                            }
-                            startDate{
-                              month
-                            }
-                            coverImage{
-                              extraLarge
-                            }
-                            format
-                        }
-                    }
-                }''';
-      var json = {'query': query, 'variables': variables};
-      //debugPrint(jsonEncode(json));
-      var client = http.Client();
-      // make POST request
-      var response =
-          await client.post(url, headers: headers, body: jsonEncode(json));
-      // check the status code for the result
-      if (this.mounted) {
-        this.setState(() {
-          searchList = jsonDecode(response.body);
-          //print(searchList);
-          if (searchList['data'] != null) {
-            var media = searchList['data']['Page']['media'];
-            for (var str in media) {
-              //debugPrint(str['title']['romaji']);
-              if (mediaformat.contains(str['format'])) {
-                animeList.add([
-                  str['id'],
-                  str['title']['romaji'],
-                  str['episodes'],
-                  str['idMal'],
-                  str['coverImage']['extraLarge']
-                ]);
-              }
-            }
-          } else {
-          }
-        });
-      }
-      client.close();
-      // searchList = jsonDecode(response.body);
-      // List<String> anime = new List();
-      // print(page.toString());
-      // page = 1;
-
-    
-
-    // for (String i in animeList){
-    //   debugPrint(i);
-
-    // }
-    // for(int i=0; i<animeList.length; i++){
-    //   print(animeList[i][0]);
-    //   print(animeList[i][1]);
-    // }
-    amountListView = animeList.length;
-    _loading = false;
-
-  }
-
-  nextFilterQueryData(statusIndex, typeIndex, seasonReleaseIndex, yearRelease, page) async {
-    _loading = true;
-    //print("querydata--------------");
-    final url = Uri.parse('https://graphql.anilist.co');
-    Map<String, String> headers = {"Content-type": "application/json"};
-
-      Map variables = {
-        'page': page,
-        'perPage': 20,
-        'isAdult': false
-      };
-      String filterQueryStr = '''''';
-      String filterMediaStr = '''''';
-      if (statusIndex != null) {
-        variables['status'] = mediaStatus[_dropDownAiringStatusIndex];
-        filterQueryStr = filterQueryStr+''',\$status:MediaStatus''';
-        filterMediaStr = filterMediaStr+''',status:\$status''';
-      }
-      if (typeIndex != null) {
-        variables['format'] = mediaformat[typeIndex];
-        filterQueryStr = filterQueryStr+''',\$format:MediaFormat''';
-        filterMediaStr = filterMediaStr+''',format:\$format''';
-      }
-      else if(typeIndex == null){
-        variables['format_in'] = mediaformat;
-        filterQueryStr = filterQueryStr+''',\$format_in:[MediaFormat]''';
-        filterMediaStr = filterMediaStr+''',format_in:\$format_in''';
-      }
-      if (_dropDownSeasonReleaseIndex != null) {
-        variables['season'] = mediaSeson[_dropDownSeasonReleaseIndex];
-        filterQueryStr = filterQueryStr+''',\$season:MediaSeason''';
-        filterMediaStr = filterMediaStr+''',season:\$season''';
-      }
-      if (yearRelease != null) {
-        variables['seasonYear'] = yearRelease;
-        filterQueryStr = filterQueryStr+''',\$seasonYear:Int''';
-        filterMediaStr = filterMediaStr+''',seasonYear:\$seasonYear''';
-      }
-      if(filterMediaStr.length == 0 || filterQueryStr.length == 0){
-        return "You must select at least 1 filter";
-      }
-      String query =
-          '''query (\$page: Int, \$perPage: Int, \$isAdult:Boolean '''+filterQueryStr+''') {
-                    Page (page: \$page, perPage: \$perPage) {
-                        pageInfo {
-                            total
-                            currentPage
-                            lastPage
-                            hasNextPage
-                            perPage
-                        }
-                        media (isAdult:\$isAdult, type: ANIME'''+filterMediaStr+''') {
-                            id
-                            idMal
-                            episodes
-                            title {
-                                romaji
-                            }
-                            startDate{
-                              month
-                            }
-                            coverImage{
-                              extraLarge
-                            }
-                            format
-                        }
-                    }
-                }''';
-      var json = {'query': query, 'variables': variables};
-      //debugPrint(jsonEncode(json));
-      var client = http.Client();
-      // make POST request
-      var response =
-          await client.post(url, headers: headers, body: jsonEncode(json));
-      // check the status code for the result
-      if (this.mounted) {
-        this.setState(() {
-          searchList = jsonDecode(response.body);
-          //print(searchList);
-          if (searchList['data'] != null) {
-            var media = searchList['data']['Page']['media'];
-            for (var str in media) {
-              //debugPrint(str['title']['romaji']);
-              if (mediaformat.contains(str['format'])) {
-                animeList.add([
-                  str['id'],
-                  str['title']['romaji'],
-                  str['episodes'],
-                  str['idMal'],
-                  str['coverImage']['extraLarge']
-                ]);
-              }
-            }
-            page = searchList['data']['Page']['pageInfo']['lastPage'];
-          } else {
-            page = 1;
-          }
-        });
-      }
-      client.close();
-      // searchList = jsonDecode(response.body);
-      // List<String> anime = new List();
-      // print(page.toString());
-      // page = 1;
-
-    
-
-    // for (String i in animeList){
-    //   debugPrint(i);
-
-    // }
-    // for(int i=0; i<animeList.length; i++){
-    //   print(animeList[i][0]);
-    //   print(animeList[i][1]);
-    // }
-
-    setState(() {
-      // if (animeList.length < 20) {
-      //   amountListView = amountListView + animeList.length;
-      // } else {
-      //   amountListView = amountListView + 20;
-      // }
-      amountListView = animeList.length;
-    });
+    lcAnimeList = new List();
+    year == null? year = null : year = int.parse(year);
+    currentFilter = [licensor, streamingServiceIndex, season, year, format];
+    var json = {"licensor":licensor, "season":season, "year":year, "format":format, 'page': 1, 'perPage': 20};
+    var r = await Requests.post('http://shirakami.trueddns.com:60181/filterlclist', json: json);
+    //var r = await Requests.post('http://192.168.1.57:8000/deleteanimelist', json: json);
+    r.raiseForStatus();
+    String rs1 = r.content();
+    //print(rs1);
+    if (rs1 == "Page ended"){
+      this.setState(() {
+          _loading = false;
+        }
+      );
+      return;
+    }
+    if (this.mounted) {
+      this.setState(() {
+        var resp = jsonDecode(rs1);
+        //print(resp.toString());
+        for (var str in resp) {
+          //debugPrint(str['title']['romaji']);
+          lcAnimeList.add(str);
+        }
+        amountListView = lcAnimeList.length;
+      });
+    }
+    print(lcAnimeList.length.toString());
     _loading = false;
   }
 
-  dataList() {
-    List<String> myList = List<String>(3);
-    myList[0] = 'one';
-    myList[1] = 'two';
-    myList[2] = 'three';
-    return myList;
-  }
-
-  searchData() {
-    List<String> myList = dataList();
-    List<String> searchList = new List();
-    int found = 0;
-    for (String str in myList) {
-      if (str.contains(searchQuery)) {
-        searchList.add(str);
-        found++;
-      }
+  filterNextLcAnime(licensor, season, year, format) async{
+    _loading = true;
+    queryState = "filterData";
+    var json = {"licensor":licensor, "season":season, "year":year, "format":format, 'page': fetchPage, 'perPage': 20};
+    var r = await Requests.post('http://shirakami.trueddns.com:60181/filterlclist', json: json);
+    //var r = await Requests.post('http://192.168.1.57:8000/deleteanimelist', json: json);
+    r.raiseForStatus();
+    String rs1 = r.content();
+    if (rs1 == "Page ended"){
+      this.setState(() {
+          _loading = false;
+        }
+      );
+      return;
     }
-    // if (found <= 0){
-    //   searchList.add("Not found");
-    // }
-    return searchList;
-  }
-
-  dataManager() {
-    if (_isSearching) {
-      queryData();
-      return searchData();
-    } else if (!_isSearching) {
-      initData();
-      return dataList();
+    if (this.mounted) {
+      this.setState(() {
+        var resp = jsonDecode(rs1);
+        //print(resp.toString());
+        for (var str in resp) {
+          //debugPrint(str['title']['romaji']);
+          lcAnimeList.add(str);
+        }
+        amountListView = lcAnimeList.length;
+        
+      });
     }
-    initData();
-    return dataList();
+    _loading = false;
   }
-
   @override
   void initState() {
     super.initState();
     fetchPage = 1;
     yearGenerator();
-    this.initData();
+    this.getLcAnime();
     scrollController = new ScrollController()..addListener(_scrollListener);
   }
 
@@ -790,44 +267,116 @@ class _AddState extends State<Add> {
   }
 
   void _scrollListener() {
-    //print(scrollController.position.extentAfter);
+    // print(scrollController.position.extentAfter);
     // if (scrollController.position.extentAfter < 500) {
     //   setState(() {
-    //     animeList.addAll(new List.generate(42, (index) => 'Inserted $index'));
+    //     lcAnimeList.addAll(new List.generate(42, (index) => 'Inserted $index'));
     //   });
     // }
+   
+      if (scrollController.position.pixels ==
+          scrollController.position.maxScrollExtent) {
+          fetchPage++;        
+          switch(queryState){
+            case "initData":
+              setState(() {
+                getNextLcAnime();
+              });
+              break;
 
-    if (scrollController.position.pixels ==
-        scrollController.position.maxScrollExtent) {
-      fetchPage++;        
-      switch(queryState){
-        case "initData":
-          nextInitData(fetchPage);
-          break;
+            case "queryData":
+              setState(() {
 
-        case "queryData":
-          nextQueryData(fetchPage);
-          break;
+              });
+              break;
 
-        case "filterData":
-          nextFilterQueryData(currentFilter[0], currentFilter[1], currentFilter[2], currentFilter[3], fetchPage);
-          break;
+            case "filterData":
+              setState(() {
+                filterNextLcAnime(currentFilter[0], currentFilter[1], currentFilter[2], currentFilter[3]);
+              });
+              break;
 
-      }
-      setState(() {
-        // if (amountListView + 20 > animeList.length) {
-        // } else if (amountListView + 20 > animeList.length) {
-        //   runLoading();
-        //   amountListView = amountListView + 20 - animeList.length;
-        // } else {
-        //   runLoading();
-        //   amountListView = amountListView + 20;
-        // }
+          }
+          
+          // setState(() {
+          //   if (amountListView + 20 > lcAnimeList.length) {
+          //   } else if (amountListView + 20 > lcAnimeList.length) {
+          //     runLoading();
+          //     amountListView = amountListView + 20 - lcAnimeList.length;
+          //   } else {
+          //     runLoading();
+          //     amountListView = amountListView + 20;
+          //   }
 
 
+          // });
+        }
+      
+    
+  }
+
+  queryId(method, animeid, episode, status, rating, romaji, imgurl, context) async {
+    //print("querydata--------------");
+    _loading = true;
+    int malid;
+    int totaleps;
+    final url = Uri.parse('https://graphql.anilist.co');
+    Map<String, String> headers = {"Content-type": "application/json"};
+    Map variables = {'id': animeid};
+    String query = '''query (\$id: Int) {
+                      Media (id:\$id, type: ANIME) {
+                          id
+                          idMal
+                          episodes
+                          title {
+                              romaji
+                          }
+                          startDate{
+                            month
+                          }
+                          coverImage{
+                            extraLarge
+                          }
+                      }
+              }''';
+    var json = {'query': query, 'variables': variables};
+    //debugPrint(jsonEncode(json));
+    var client = http.Client();
+    // make POST request
+    var response =
+        await client.post(url, headers: headers, body: jsonEncode(json));
+    // check the status code for the result
+    var searchList = {};
+    if (this.mounted) {
+      this.setState(() {
+        
+        searchList = jsonDecode(response.body);
+        // print(jsonDecode(response.body));
+        //print(jsonEncode(searchList));
+        if (searchList['data'] != null) {
+            malid = searchList['data']['Media']['idMal'];
+            totaleps = searchList['data']['Media']['episodes'];
+            romaji = searchList['data']['Media']['title']['romaji'];
+            imgurl = searchList['data']['Media']['coverImage']['extraLarge'];
+        }
+      
       });
+      _loading = false;
+    }
+    client.close();
+    if (method == "AddDB"){
+      addAnime(animeid, episode, status, rating, malid, romaji, imgurl, totaleps);
+      print("AddDB");
+    }
+    else if (method == "queryAnime"){
+      checkMyList(context, searchList['data']['Media']);
+      print("queryAnime");
+    }
+    else if (method == "editDB"){
+
     }
   }
+  
 
   thisSeason(date){
     if(date.month >= 1 && date.month <= 3)
@@ -840,8 +389,7 @@ class _AddState extends State<Add> {
       return "FALL";
   }
 
-  addAnime(animeid, episode, status, rating, malid, romaji, imgurl,
-      totaleps) {
+  addAnime(animeid, episode, status, rating, malid, romaji, imgurl, totaleps) {
     if (episode != "" ||
         _dropDownStatus != null ||
         _dropDownRating != null ||
@@ -872,8 +420,7 @@ class _AddState extends State<Add> {
     }
   }
 
-  addTodb(animeid, episode, status, rating, malid, romaji, imgurl,
-      totaleps) async {
+  addTodb(animeid, episode, status, rating, malid, romaji, imgurl, totaleps) async {
     var json = {
       'uid': 0,
       'anilistid': animeid,
@@ -907,7 +454,7 @@ class _AddState extends State<Add> {
         updatedb(animeid, listid, status, episode, rating, totaleps);
 
         //after add anime
-
+        
         textController.text = "";
         _dropDownStatus = null;
         rating = null;
@@ -953,7 +500,7 @@ class _AddState extends State<Add> {
         var resp = jsonDecode(rs1);
         for (var str in resp) {
           //debugPrint(str['title']['romaji']);
-          if(animeData[0] == str['anilistid']){
+          if(animeData['id'] == str['anilistid']){
             listid = str['listid'];
             textController.text = str['episode'].toString(); //after add anime
             _dropDownStatus = str['status'];
@@ -987,7 +534,7 @@ class _AddState extends State<Add> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text(animeData[1]),
+          title: Text(animeData['title']['romaji']),
           content: SingleChildScrollView(
             child: StatefulBuilder(
               builder: (BuildContext context, StateSetter setState) {
@@ -1013,8 +560,8 @@ class _AddState extends State<Add> {
                       onChanged: (val) {
                         setState(() {
                             _dropDownStatus = val;
-                            if(_dropDownStatus == 'Completed' && animeData[2] != null){
-                              textController.text = animeData[2].toString();
+                            if(_dropDownStatus == 'Completed' && animeData['episodes'] != null){
+                              textController.text = animeData['episodes'].toString();
                             }
                             else if(_dropDownStatus == 'Considering'){
                               textController.text = "0";
@@ -1042,8 +589,8 @@ class _AddState extends State<Add> {
                               if(animeData[2] == null){
 
                               }
-                              else if(int.parse(textController.text) > animeData[2] || _dropDownStatus == 'Completed'){
-                                textController.text = animeData[2].toString();
+                              else if(int.parse(textController.text) > animeData['episodes'] || _dropDownStatus == 'Completed'){
+                                textController.text = animeData['episodes'].toString();
                               }
                               else if(_dropDownStatus == 'Considering'){
                                 textController.text = "0";
@@ -1091,7 +638,7 @@ class _AddState extends State<Add> {
               child: Text("Cancel"),
             ),
             new ElevatedButton(
-              onPressed: () => addAnime(animeData[0], textController.text, _dropDownStatus, _dropDownRating, animeData[3], animeData[1], animeData[4], animeData[2]),
+              onPressed: () => queryId("AddDB", animeData['id'], textController.text, _dropDownStatus, _dropDownRating, animeData['romaji'], animeData['imgurl'], null),
               child: Text("Add"),
             ),
           ],
@@ -1105,7 +652,7 @@ class _AddState extends State<Add> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text(animeData[1]),
+          title: Text(animeData['title']['romaji']),
           content: SingleChildScrollView(
             child: StatefulBuilder(
               builder: (BuildContext context, StateSetter setState) {
@@ -1131,8 +678,8 @@ class _AddState extends State<Add> {
                       onChanged: (val) {
                         setState(() {
                             _dropDownStatus = val;
-                            if(_dropDownStatus == 'Completed' && animeData[2] != null){
-                              textController.text = animeData[2].toString();
+                            if(_dropDownStatus == 'Completed' && animeData['episodes'] != null){
+                              textController.text = animeData['episodes'].toString();
                             }
                             else if(_dropDownStatus == 'Considering'){
                               textController.text = "0";
@@ -1160,8 +707,8 @@ class _AddState extends State<Add> {
                         if(animeData[2] == null){
 
                         }
-                        else if(int.parse(textController.text) > animeData[2] || _dropDownStatus == 'Completed'){
-                          textController.text = animeData[2].toString();
+                        else if(int.parse(textController.text) > animeData['episodes'] || _dropDownStatus == 'Completed'){
+                          textController.text = animeData['episodes'].toString();
                         }
                         else if(_dropDownStatus == 'Considering'){
                           textController.text = "0";
@@ -1217,7 +764,7 @@ class _AddState extends State<Add> {
             ),
             new ElevatedButton(
               onPressed: (){
-                editList(animeData[0], listid, _dropDownStatus, textController.text, _dropDownRating, animeData[2]);
+                editList(animeData['id'], listid, _dropDownStatus, textController.text, _dropDownRating, animeData['episodes']);
                 Navigator.of(context, rootNavigator: true).pop();
               },
               child: Text("Edit"),
@@ -1239,25 +786,30 @@ class _AddState extends State<Add> {
 
   List yearList = new List();
 
-  String _dropDownAiringStatus;
+  String _dropdownStreamingService;
   String _dropDownType;
   String _dropDownSeasonRelease;
   String _dropDownYearRelease;
+  String _dropDownLicensor;
+  String _dropDownstreamingService;
   int _dropDownTypeIndex;
   int _dropDownAiringStatusIndex;
   int _dropDownSeasonReleaseIndex;
+  int _dropDownstreamingServiceIndex;
+  List streamingServiceView = ['Muse Thailand (Youtube)', 'Ani-One Asia (Youtube)', 'BiliBili', 'AIS Play', 'FLIXER', 'iQiyi', 'Netflix', 'WeTV', 'TrueID', 'POPS', 'LINE TV', 'Amazon', 'iflix'];
   List formatView = ['TV', 'TV Short', 'Movie', 'Special', 'OVA', 'ONA'];
   List statusView = ['Finished', 'Airing', 'Not yet release'];
   List seasonView = ['Winter', 'Spring', 'Summer', 'Fall'];
 
   Future _filterDialog(context) async {
-     _dropDownAiringStatus = null;
-     _dropDownType = null;
-     _dropDownSeasonRelease = null;
-     _dropDownYearRelease = null;
-     _dropDownTypeIndex = null;
-     _dropDownAiringStatusIndex = null;
-     _dropDownSeasonReleaseIndex = null;
+    //  _dropDownLicensor = null;
+    //  _dropDownType = null;
+    //  _dropDownSeasonRelease = null;
+    //  _dropDownYearRelease = null;
+    //  _dropDownTypeIndex = null;
+    //  _dropDownAiringStatusIndex = null;
+    //  _dropDownSeasonReleaseIndex = null;
+    //  _dropDownstreamingService = null;
     return showDialog<void>(
       context: context,
       builder: (BuildContext context) {
@@ -1270,14 +822,14 @@ class _AddState extends State<Add> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    Text('Airing status', textAlign: TextAlign.left),
+                    Text('Licensor', textAlign: TextAlign.left),
                     DropdownButton(
-                      value: _dropDownAiringStatus,
-                      hint: Text('Airing status'),
+                      value: _dropDownLicensor,
+                      hint: Text('Licensor'),
                       isExpanded: true,
                       iconSize: 30.0,
                       style: TextStyle(color: Colors.blue),
-                      items: ['Finished', 'Airing', 'Not yet release'].map(
+                      items: ['Muse Thailand', 'DEX', 'Aniplus Asia', 'Ani-One Asia'].map(
                         (val) {
                           return DropdownMenuItem<String>(
                             value: val,
@@ -1287,8 +839,43 @@ class _AddState extends State<Add> {
                       ).toList(),
                       onChanged: (val) {
                         setState(() {
-                            _dropDownAiringStatus = val;
-                            _dropDownAiringStatusIndex = statusView.indexOf(val);
+                            _dropDownLicensor = val;
+                            // _dropDownAiringStatusIndex = statusView.indexOf(val);
+                            // if(_dropDownStatus == 'Completed' && animeList[index][2] != null){
+                            //   textController.text = animeList[index][2].toString();
+                            // }
+                            // else if(_dropDownStatus == 'Considering'){
+                            //   textController.text = "0";
+                            // }
+                            // else{
+                            //   textController.text = "";
+                            // }
+                          },
+                        );
+                      },
+                    ),
+                    SizedBox(
+                      height: 10.0,
+                    ),
+                    Text('Streaming Service', textAlign: TextAlign.left),
+                    DropdownButton(
+                      value: _dropDownstreamingService,
+                      hint: Text('Streaming Service'),
+                      isExpanded: true,
+                      iconSize: 30.0,
+                      style: TextStyle(color: Colors.blue),
+                      items: streamingServiceView.map(
+                        (val) {
+                          return DropdownMenuItem<String>(
+                            value: val,
+                            child: Text(val),
+                          );
+                        },
+                      ).toList(),
+                      onChanged: (val) {
+                        setState(() {
+                            _dropDownstreamingService = val;
+                            _dropDownstreamingServiceIndex = streamingServiceView.indexOf(val);
                             // if(_dropDownStatus == 'Completed' && animeList[index][2] != null){
                             //   textController.text = animeList[index][2].toString();
                             // }
@@ -1418,7 +1005,15 @@ class _AddState extends State<Add> {
             ),
             new ElevatedButton(
               onPressed: () {
-                initData();
+                _dropDownLicensor = null;
+                _dropDownType = null;
+                _dropDownSeasonRelease = null;
+                _dropDownYearRelease = null;
+                _dropDownTypeIndex = null;
+                _dropDownAiringStatusIndex = null;
+                _dropDownSeasonReleaseIndex = null;
+                _dropDownstreamingService = null;
+                getLcAnime();
                 Navigator.of(context, rootNavigator: true).pop();
                 _filterDialog(context);
               },
@@ -1426,8 +1021,11 @@ class _AddState extends State<Add> {
             ),
             new ElevatedButton(
               onPressed: () {
-                filterQueryData(_dropDownAiringStatus, _dropDownTypeIndex, _dropDownSeasonReleaseIndex, _dropDownYearRelease);
-                Navigator.of(context, rootNavigator: true).pop();
+                this.setState(() {
+                    filterLcAnime(_dropDownLicensor, _dropdownStreamingService, _dropDownSeasonRelease, _dropDownYearRelease, _dropDownType);
+                    Navigator.of(context, rootNavigator: true).pop();
+                  }
+                );
               },
               child: Text("Apply"),
             ),
@@ -1438,18 +1036,18 @@ class _AddState extends State<Add> {
   }
   Future<void> _pullRefresh() async {
     setState(() {
-      animeList = new List();
+      lcAnimeList = new List();
       switch (queryState){
         case "initData":
-          initData();
+          getLcAnime();
           break;
         
         case "queryData":
-          queryData();
+          //queryData();
           break;
 
         case "filterData":
-          filterQueryData(_dropDownAiringStatus, _dropDownTypeIndex, _dropDownSeasonReleaseIndex, _dropDownYearRelease);
+          filterLcAnime(_dropDownLicensor, _dropDownstreamingServiceIndex, _dropDownSeasonRelease, _dropDownYearRelease, _dropDownType);
           break;
       }
     });
@@ -1466,7 +1064,7 @@ class _AddState extends State<Add> {
     return Scaffold(
         appBar: AppBar(
           leading: _isSearching ? const BackButton() : null,
-          title: _isSearching ? _buildSearchField() : Text('Add anime'),
+          title: _isSearching ? _buildSearchField() : Text('Licensed anime in Thailand'),
           actions: _buildActions(),
         ),
         body: Stack(
@@ -1477,7 +1075,7 @@ class _AddState extends State<Add> {
             child: 
               new ListView.builder(
                 controller: scrollController,
-                itemCount: animeList.length == 0 ? 0 : amountListView,
+                itemCount: lcAnimeList.isEmpty ? 0 : amountListView,
                 itemBuilder: (BuildContext context, int index) {
                   return Container(
                     height: 150,
@@ -1488,7 +1086,7 @@ class _AddState extends State<Add> {
                           children: [
                             Expanded(
                               flex: 33,
-                              child: Image.network(animeList[index][4]),
+                              child: Image.network(lcAnimeList[index]['imgurl']),
                             ),
                             Expanded(
                               flex: 66,
@@ -1497,19 +1095,31 @@ class _AddState extends State<Add> {
                                   SizedBox(
                                     height: 10.0,
                                   ),
-                                  Expanded(
-                                    flex: 5,
-                                    child: 
-                                      Align(
-                                        alignment: Alignment.topLeft,
-                                        child: new Text(animeList[index][1],
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 16,
-                                              color: Colors.black,
-                                            ),
-                                            textAlign: TextAlign.left),
-                                      ),
+                                  Align(
+                                    alignment: Alignment.topLeft,
+                                    child: new Text(lcAnimeList[index]['romaji'],
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          color: Colors.black,
+                                        ),
+                                        textAlign: TextAlign.left),
+                                  ),
+                                  SizedBox(
+                                    height: 10.0,
+                                  ),
+                                  Align(
+                                    alignment: Alignment.topLeft,
+                                    child: new Text(lcAnimeList[index]['licensor'] == 0?
+                                    "Licensor: -"
+                                    :
+                                    "Licensor: "+lcAnimeList[index]['licensor'],
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.normal,
+                                          fontSize: 16,
+                                          color: Colors.black,
+                                        ),
+                                        textAlign: TextAlign.left),
                                   ),
                                 ],
                               ),
@@ -1538,7 +1148,7 @@ class _AddState extends State<Add> {
                                           case 0:
                                             Navigator.push(
                                               context,
-                                              MaterialPageRoute(builder: (context) => AnimeDetail(animeList[index][0])),
+                                              MaterialPageRoute(builder: (context) => AnimeDetail(lcAnimeList[index]['anilistid'])),
                                             );
                                             break;
 
@@ -1546,7 +1156,8 @@ class _AddState extends State<Add> {
                                             // textController.text = animeList[index][5].toString(); //after add anime
                                             // _dropDownStatus = animeList[index][4];
                                             // _dropDownRating = animeList[index][6].toString();
-                                            checkMyList(context, animeList[index]);
+                                            print("grg;rtkg,;rt"+lcAnimeList[index]['anilistid'].toString());
+                                            queryId("queryAnime", lcAnimeList[index]['anilistid'], null, null, null, lcAnimeList[index]['romaji'], lcAnimeList[index]['imgurl'], context);
                                             break;
 
                                           // case 2:
@@ -1569,7 +1180,10 @@ class _AddState extends State<Add> {
                           //   MaterialPageRoute(builder: (context) => AnimeDetail(animeList[index][0])),
                           // );
                           //_showDialog(context, index);
-                          checkMyList(context, animeList[index]);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => AnimeDetail(lcAnimeList[index]['anilistid'])),
+                          );
                         },
                       ),
                     ),

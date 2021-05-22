@@ -212,9 +212,13 @@ def addanime():
 
     return "Update Successful"
 
-@app.route('/getlclist', methods = ['GET'])
+@app.route('/getlclist', methods = ['POST'])
 def getlclist():
     # if request.method == 'POST':
+    content = request.get_json(silent=True)
+    firstIndex = content['page'] * content['perPage'] - content['perPage']
+    lastIndex = firstIndex + content['perPage'] - 1
+    content = {k: v for k, v in content.items() if v is not None}
     getnaimelist = Managedb()
     
     df = pd.DataFrame(getnaimelist.readlclist(), 
@@ -223,28 +227,52 @@ def getlclist():
      'bilibili', 'aisplay','netflix','anioneyt',
      'iqiyi','flixer','wetv','trueid', 'viu','pops', 'linetv',
       'amazon', 'iflix'])
-    df = df.sort_values(by=['year'], ascending=True)
+
+    df = df.sort_values(by=['year'], ascending=True, ignore_index=True)
+    df = df.fillna(0)
+
+    if len(df.index) - 1 < firstIndex:
+        return "Page ended"
+    if(len(df.index) - 1 < lastIndex):
+        lastIndex = len(df.index) - 1
+    df = df.loc[firstIndex:lastIndex]
+
     json = df.to_dict('records')
     print(type(json))
 
     return jsonify(json)
 
-@app.route('/filterlclist', methods = ['GET'])
+@app.route('/filterlclist', methods = ['POST'])
 def filterlclist():
     # if request.method == 'POST':
     getnaimelist = Managedb()
     content = request.get_json(silent=True)
-    content = {'season': 'Winter'}
+    print(content)
+    # content = {'season': 'Winter'}
+    firstIndex = content['page'] * content['perPage'] - content['perPage']
+    lastIndex = firstIndex + content['perPage'] - 1
+    content['perPage'] = None
+    content['page'] = None
+    content = {k: v for k, v in content.items() if v is not None}
     df = pd.DataFrame(getnaimelist.readlclist(), 
     columns = ['animelicenseid','anilistid','romaji',
     'season','year','format', 'imgurl','licensor','musethyt',
      'bilibili', 'aisplay','netflix','anioneyt',
      'iqiyi','flixer','wetv','trueid', 'viu','pops', 'linetv',
       'amazon', 'iflix'])
-    df1 = df.loc[(df[list(content)] == pd.Series(content)).all(axis=1)]
-    df = df.sort_values(by=['year'], ascending=True)
-    json = df1.to_dict('records')
-    print(type(json))
+    df = df.loc[(df[list(content)] == pd.Series(content)).all(axis=1)]
+    df = df.reset_index(drop=True)
+    df = df.loc[firstIndex:lastIndex]
+    df = df.sort_values(by=['year'], ascending=True, ignore_index=True)
+    df = df.fillna(0).reset_index()
+    print(df)
+
+    if len(df.index) - 1 < firstIndex:
+        return "Page ended"
+    if(len(df.index) - 1 < lastIndex):
+        lastIndex = len(df.index) - 1
+
+    json = df.to_dict('records')
 
     return jsonify(json)
 if __name__ == '__main__':
