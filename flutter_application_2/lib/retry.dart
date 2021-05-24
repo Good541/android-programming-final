@@ -1,8 +1,5 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_application_2/retry.dart';
 import 'package:page_transition/page_transition.dart';
-import 'package:requests/requests.dart';
 import 'main.dart';
 import 'splash.dart';
                                               

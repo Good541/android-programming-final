@@ -1,13 +1,9 @@
-import 'dart:convert';
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
-import 'package:flutter_application_2/main.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:flutter/services.dart';
 import 'package:requests/requests.dart';
-import 'package:flutter_restart/flutter_restart.dart';
-
-
+import 'requesturl.dart';
+import 'login.dart';
  
 class Profile extends StatefulWidget {
     static const routeName = '/profile';
@@ -22,38 +18,31 @@ class _ProfileState extends State<Profile> {
     List userdata = new List();
     List menu = new List();
     bool _loginStatus;
+    bool _passwordVisibleOldPwd;
+    bool _passwordVisibleNewPwd;
+    var requestURrl = RequestURL();
+    
     @override
     void initState() {
       _loading = true;
+      _passwordVisibleNewPwd = false;
+      _passwordVisibleOldPwd = false;
       getAvatar();
       getuserdata();
-      menuList();
-
       super.initState();
       
     }
 
+    changePassword(oldpwd, newpwd) async{
+      var json = {'oldpwd': oldpwd, 'newpwd': newpwd};
+      var r = await Requests.post(requestURrl.getApiURL+"/changepassword", json: json);
+      r.raiseForStatus();
+      String rs = r.content();
+      return rs;
+    }
+
     logout() async{
-      // final url = Uri.parse('http://shirakami.trueddns.com:60181/login');
-      // // final url = Uri.parse('http://localhost:8000/login');
-      // Map<String, String> headers = {"Content-type": "application/json"};
-      // var json = {
-      //   'uname': uname,
-      //   'pwd': pwd,
-      //   'rememberme': 'y'
-      // };
-      // debugPrint(jsonEncode(json));
-      // // make POST request
-      // var client = http.Client();
-      // var response = await client.post(url, headers: headers, body: jsonEncode(json));
-      // // check the status code for the result
-      // String result = response.body;
-      // if (this.mounted) {
-      //   this.setState(() {
-      //     result = response.body;
-      //   });
-      // }
-      // client.close();
+
       if(_loginStatus == false){
         Navigator.pushReplacement(
           context,
@@ -63,11 +52,9 @@ class _ProfileState extends State<Profile> {
           ),),
         );
       }
-      var r = await Requests.get("http://shirakami.trueddns.com:60181/logout");
-      //var r = await Requests.get("http://192.168.1.57:8000/logout"); 
+      var r = await Requests.get(requestURrl.getApiURL+"/logout");
       r.raiseForStatus();
       String rs = r.content();
-      //print(rs);
       if (rs != "Successful"){
         return rs;
       }        
@@ -98,19 +85,17 @@ class _ProfileState extends State<Profile> {
                     ),
                   );
     }
+
     getuserdata() async{
       userdata = new List();
       try{
-        var r = await Requests.get('http://shirakami.trueddns.com:60181/userdata');
-        //var r = await Requests.get('http://192.168.1.57:8000/userdata');
+        var r = await Requests.get(requestURrl.getApiURL+'/userdata');
         if (this.mounted) {
           this.setState(() {
             r.raiseForStatus();
             dynamic rs = r.json();
-            //print(r.content());
             userdata.add(rs['uid']);
             userdata.add(rs['uname']);
-            //print(userdata[1]);
           });
         }
       }
@@ -121,52 +106,125 @@ class _ProfileState extends State<Profile> {
       _loading = false;
     }
 
-    menuList(){
-      menu = new List();
-      menu.add(changePasswordMenu());
-      menu.add(logoutMenu());
-    }
+    final oldPwdtextController = TextEditingController();
+    final newPwdtextController = TextEditingController();
+    changePasswordDialog(context){
+      oldPwdtextController.text = null;
+      newPwdtextController.text = null;
 
-    changePasswordMenu(){
-      return ListTile(
-        leading: Icon(Icons.edit),
-        title: Text('Change password',textScaleFactor: 1.3,),
-        //trailing: Icon(Icons.done),
-        // subtitle: Text('Change password'),
-        //selected: true,
-        onTap: () {
-          setState(() {
-            // txt='List Tile pressed';
-          });
-        },
-      );
-    }
+      return showDialog<void>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text("Change password"),
+            content: SingleChildScrollView(
+              child: StatefulBuilder(
+                builder: (BuildContext context, StateSetter setState) {
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                    //Text("Old password"),
+                    TextFormField(
+                      controller: oldPwdtextController,
+                      obscureText: !_passwordVisibleOldPwd,
+                      keyboardType: TextInputType.number,
+                      style: TextStyle(color: Colors.blue),
+                      inputFormatters: <TextInputFormatter>[
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(6),
+                      ],
+                      onChanged: (text) {
 
-    logoutMenu(){
-      return ListTile(
-        leading: Icon(Icons.logout),
-        title: Text('Logout',textScaleFactor: 1.3,),
-        //trailing: Icon(Icons.done),
-        // subtitle: Text('Change password'),
-        //selected: true,
-        onTap: () {
-          setState(() {
-            // txt='List Tile pressed';
-          });
+                      },
+                      decoration: InputDecoration(
+                        labelText: 'Old password',
+                        hintText: 'Enter old password',
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _passwordVisibleOldPwd
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                            color: Theme.of(context).primaryColorDark,
+                            ),
+                          onPressed: () {
+                            setState(() {
+                                _passwordVisibleOldPwd = !_passwordVisibleOldPwd;
+                            });
+                          },
+                        ),
+                      ), 
+                    
+                    ),
+                    SizedBox(
+                      height: 20.0,
+                    ),
+                    TextFormField(
+                      controller: newPwdtextController,
+                      obscureText: !_passwordVisibleNewPwd,
+                      keyboardType: TextInputType.number,
+                      style: TextStyle(color: Colors.blue),
+                      inputFormatters: <TextInputFormatter>[
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(6),
+                      ],
+                      onChanged: (text) {
+
+                      },
+                      decoration: InputDecoration(
+                        labelText: 'New password',
+                        hintText: 'Enter new password',
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _passwordVisibleNewPwd
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                            color: Theme.of(context).primaryColorDark,
+                            ),
+                          onPressed: () {
+                            setState(() {
+                                _passwordVisibleNewPwd = !_passwordVisibleNewPwd;
+                            });
+                          },
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      height: 10.0,
+                    ),
+                      ],
+                  );
+                },
+              ),
+            ),
+            actions: [
+              new ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context, rootNavigator: false).pop();
+                },
+                child: Text("Cancel"),
+              ),
+              new ElevatedButton(
+                onPressed: () async{
+                  String status = await changePassword(oldPwdtextController.text, newPwdtextController.text);
+                  print(status);
+                  Navigator.of(context, rootNavigator: false).pop();
+                },
+                child: Text("OK"),
+              ),
+            ],
+          );
         },
       );
     }
 
     getAvatar() async {    
       try{
-        var r = await Requests.get('http://shirakami.trueddns.com:60181/getuseravatar');
-        //var r = await Requests.get('http://192.168.1.57:8000/getuseravatar');
+        var r = await Requests.get(requestURrl.getApiURL+'/getuseravatar');
         setState(() {
           r.raiseForStatus();
           var rs1 = r.bytes();
-          //print(rs1);
           avatarImg = rs1;
-          //return r;
         });
       }
       catch(e){
@@ -175,123 +233,6 @@ class _ProfileState extends State<Profile> {
       }
     }
 
-    userMenu(){
-      if(_loginStatus == null){
-        return  <Widget>[
-                      SizedBox(
-                      height: 25.0,
-                      ),
-                      CircleAvatar(
-                      backgroundImage: avatarImg == null? avatarImg: MemoryImage(avatarImg),
-                      radius: 50.0,
-                      ),
-                      SizedBox(
-                        height: 10.0,
-                      ),
-                      usernamefield(),
-                      SizedBox(
-                        height: 20.0,
-                      ),
-                      Divider(),
-                      ListTile(
-                        leading: Icon(Icons.logout),
-                        title: Text('Logout',textScaleFactor: 1.3,),
-                        //trailing: Icon(Icons.done),
-                        // subtitle: Text('Change password'),
-                        //selected: true,
-                        
-                        onTap: () {
-                          setState(() {
-                           logout();
-                          });
-                        },
-                      ),
-
-                    ];
-      }
-      else if(_loginStatus == false){
-        return  <Widget>[
-                      SizedBox(
-                      height: 25.0,
-                      ),
-                      CircleAvatar(
-                      backgroundImage: avatarImg == null? avatarImg: MemoryImage(avatarImg),
-                      radius: 50.0,
-                      ),
-                      SizedBox(
-                        height: 10.0,
-                      ),
-                      Text(
-                        'Not sign in',
-                        style: TextStyle(
-                          fontSize: 22.0,
-                          color: Colors.black,
-                        ),
-                      ),
-                      SizedBox(
-                        height: 20.0,
-                      ),
-                      Divider(),
-                      ListTile(
-                        leading: Icon(Icons.logout),
-                        title: Text('Logout',textScaleFactor: 1.3,),
-                        //trailing: Icon(Icons.done),
-                        // subtitle: Text('Change password'),
-                        //selected: true,
-                        
-                        onTap: () {
-                          setState(() {
-                           logout();
-                          });
-                        },
-                      ),
-
-                    ];
-      }
-      return <Widget>[
-                      SizedBox(
-                      height: 25.0,
-                      ),
-                      CircleAvatar(
-                      backgroundImage: avatarImg == null? avatarImg: MemoryImage(avatarImg),
-                      radius: 50.0,
-                      ),
-                      SizedBox(
-                        height: 10.0,
-                      ),
-                      usernamefield(),
-                      SizedBox(
-                        height: 20.0,
-                      ),
-                      Divider(),
-                      ListTile(
-                        leading: Icon(Icons.edit),
-                        title: Text('Change password',textScaleFactor: 1.3,),
-                        //trailing: Icon(Icons.done),
-                        // subtitle: Text('Change password'),
-                        //selected: true,
-                        onTap: () {
-                          setState(() {
-                            // txt='List Tile pressed';
-                          });
-                        },
-                      ),
-                      ListTile(
-                        leading: Icon(Icons.logout),
-                        title: Text('Logout',textScaleFactor: 1.3,),
-                        //trailing: Icon(Icons.done),
-                        // subtitle: Text('Change password'),
-                        //selected: true,
-                        
-                        onTap: () {
-                          setState(() {
-                           logout();
-                          });
-                        },
-                      ),
-
-                    ];
-    }
     var avatarImg;
     bool _loading = false;
     @override
@@ -303,7 +244,6 @@ class _ProfileState extends State<Profile> {
           body: SingleChildScrollView(
           child: Center(
             child: Column(
-              //mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 SizedBox(
                 height: 25.0,
@@ -323,22 +263,15 @@ class _ProfileState extends State<Profile> {
                 ListTile(
                   leading: Icon(Icons.edit),
                   title: Text('Change password',textScaleFactor: 1.3,),
-                  //trailing: Icon(Icons.done),
-                  // subtitle: Text('Change password'),
-                  //selected: true,
                   onTap: () {
                     setState(() {
-                      // txt='List Tile pressed';
+                      changePasswordDialog(context);
                     });
                   },
                 ),
                 ListTile(
                   leading: Icon(Icons.logout),
                   title: Text('Logout',textScaleFactor: 1.3,),
-                  //trailing: Icon(Icons.done),
-                  // subtitle: Text('Change password'),
-                  //selected: true,
-                  
                   onTap: () {
                     setState(() {
                     logout();
@@ -353,7 +286,4 @@ class _ProfileState extends State<Profile> {
         ),
       );
     }
-}
-
-mixin Uint8List {
 }

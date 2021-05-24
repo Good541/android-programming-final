@@ -1,13 +1,14 @@
-import 'dart:async';
 import 'dart:convert';
+import 'package:android_intent/android_intent.dart';
+import 'package:external_app_launcher/external_app_launcher.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_application_2/retry.dart';
 import 'package:html/parser.dart';
-import 'package:page_transition/page_transition.dart';
 import 'package:requests/requests.dart';
-import 'main.dart';
+import 'package:transparent_image/transparent_image.dart';
 import 'package:flutter_web_browser/flutter_web_browser.dart';
 import 'package:http/http.dart' as http;
+import 'package:readmore/readmore.dart';
+import 'requesturl.dart';
                                            
 class AnimeDetail extends StatefulWidget {
   int animeID;
@@ -23,6 +24,13 @@ class _AnimeDetailState extends State<AnimeDetail> {
   bool _loading = false;
   int animeID;
   List animeInfo;
+  List lcButtonList;
+  List availableLicensors = new List();
+  List streamingServiceList = ['musethyt',	'bilibili',	'aisplay',	'netflix',	'anioneyt',	'iqiyi',	'flixer',	'wetv',	'trueid',	'viu',	'pops',	'linetv',	'amazon',	'iflix'];
+  List streamingServiceView = ['Muse Thailand (Youtube)', 'BiliBili', 'AIS Play', 'Netflix', 'Ani-One Asia (Youtube)', 'iQiyi', 'FLIXER', 'WeTV', 'TrueID', 'Viu', 'POPS', 'LINE TV', 'Amazon', 'iflix'];
+  List streamingServiceLink = ['com.google.android.youtube', 'com.bstar.intl', 'com.ais.mimo.AISPlay', 'com.netflix.mediaclient','com.google.android.youtube', 'com.iqiyi.i18n', 'com.flixer.flixer'];
+  List lcAnimeList = new List();
+  var requestURrl = RequestURL();
   _AnimeDetailState(int animeID){
     this.animeID = animeID;
   }
@@ -31,10 +39,10 @@ class _AnimeDetailState extends State<AnimeDetail> {
     super.initState();
     print(animeID.toString());
     queryAnimeInfo();
+    getLcAnimeByID();
   }
 
   queryAnimeInfo() async {
-    //print("querydata--------------");
     _loading = true;
     animeInfo = new List();
     final url = Uri.parse('https://graphql.anilist.co');
@@ -64,22 +72,14 @@ class _AnimeDetailState extends State<AnimeDetail> {
                       }
               }''';
     var json = {'query': query, 'variables': variables};
-    //debugPrint(jsonEncode(json));
     var client = http.Client();
-
-    // make POST request
     var response = await client.post(url, headers: headers, body: jsonEncode(json));
-    // check the status code for the result
     if (this.mounted) {
       this.setState(() {
         var searchList = {};
         searchList = jsonDecode(response.body);
-        // print(jsonDecode(response.body));
-        //print(jsonEncode(searchList));
         if (searchList['data'] != null) {
           var data = searchList['data']['Media'];
-          //debugPrint(str['title']['romaji']);
-          //print(searchList['studios']['nodes'].toString());
           String studioStr;
           String descriptionStr;
           data['studios']['nodes'].forEach((var x) {
@@ -99,12 +99,146 @@ class _AnimeDetailState extends State<AnimeDetail> {
             descriptionStr,
             data['format']
           ]);
-          // debugPrint(titleList[i][1]);
         }
       });
     }
     client.close();
     _loading = false;
+  }
+
+  getLcAnimeByID() async{
+    //_loading = true;
+    lcAnimeList = new List();
+    var json = {"anilistid": animeID};
+    var r = await Requests.post(requestURrl.getApiURL+'/getlcbyid', json: json);
+    r.raiseForStatus();
+    String rs1 = r.content();
+    var resp = jsonDecode(rs1);
+    if(resp.isEmpty){
+      print("empty");
+      return;
+    }
+
+    if (this.mounted) {
+      this.setState(() {
+        for (var str in resp) {
+          lcAnimeList.add(str);
+        }        
+      });
+    }
+    addLicensor();
+    
+  }
+
+  addLicensor(){
+    availableLicensors = new List();
+    for (String streamingService in streamingServiceList){
+      
+      if (lcAnimeList[0][streamingService] == 1){
+        availableLicensors.add({'name':streamingServiceView[streamingServiceList.indexOf(streamingService)], 'link': streamingServiceLink[streamingServiceList.indexOf(streamingService)]});
+      }
+    }
+  }
+
+  List<Widget> buttonsList;
+  List<Widget> _buildButtonsWithNames() {
+    buttonsList = [];
+    for (int i = 0; i < availableLicensors.length; i+=2) {
+      buttonsList.add(
+        
+        Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+          Expanded(
+            flex: 5,
+            child: Text(''),
+          ),
+          Expanded(
+              flex: 44,
+              child: new ElevatedButton(
+                onPressed: () async {
+                  if(availableLicensors[i]['name'] == 'Muse Thailand (Youtube)'){
+                    const url = 'https://www.youtube.com/channel/UCn8hjQOnGYR1AZtYYMYP5jQ';
+                    AndroidIntent intent = AndroidIntent(
+                      action: 'action_view',
+                      data: url,
+                    );
+                    await intent.launch();
+                  }
+                  else if(availableLicensors[i]['name'] == 'Ani-One Asia (Youtube)'){
+                    const url = 'https://www.youtube.com/channel/UC0wNSTMWIL3qaorLx0jie6A';
+                    AndroidIntent intent = AndroidIntent(
+                      action: 'action_view',
+                      data: url,
+                    );
+                    await intent.launch();
+                  }
+                  else{
+                      await LaunchApp.openApp(
+                        androidPackageName: availableLicensors[i]['link'],
+                        openStore: false
+                      ); 
+                  }
+                },
+                child: Container(
+                    child: Center(
+                  child: Text(
+                    availableLicensors[i]['name'],
+                    textAlign: TextAlign.center,
+                  ),
+                )))),
+          Expanded(
+            flex: 2,
+            child: Text(''),
+          ),
+          i+1>=availableLicensors.length? 
+           Expanded(
+              flex: 44,
+              child: new Text(''))
+          :
+          Expanded(
+              flex: 44,
+              child: new ElevatedButton(
+                onPressed: () async {
+                  if(availableLicensors[i+1]['name'] == 'Muse Thailand (Youtube)'){
+                    const url = 'https://www.youtube.com/channel/UCn8hjQOnGYR1AZtYYMYP5jQ';
+                    AndroidIntent intent = AndroidIntent(
+                      action: 'action_view',
+                      data: url,
+                    );
+                    await intent.launch();
+                  }
+                  else if(availableLicensors[i+1]['name'] == 'Ani-One Asia (Youtube)'){
+                    const url = 'https://www.youtube.com/channel/UC0wNSTMWIL3qaorLx0jie6A';
+                    AndroidIntent intent = AndroidIntent(
+                      action: 'action_view',
+                      data: url,
+                    );
+                    await intent.launch();
+                  }
+                  else{
+                      await LaunchApp.openApp(
+                        androidPackageName: availableLicensors[i+1]['link'],
+                        openStore: false
+                      ); 
+                  }
+                },
+                child: Container(
+                    child: Center(
+                  child: Text(
+                    availableLicensors[i+1]['name'],
+                    textAlign: TextAlign.center,
+                  ),
+                )))),
+          Expanded(
+            flex: 5,
+            child: Text(''),
+          ),
+        ],
+     ),);
+    }
+    return buttonsList;
   }
 
   openBrowser(url){
@@ -156,7 +290,11 @@ class _AnimeDetailState extends State<AnimeDetail> {
                       ),
                       Expanded(
                         flex: 28,
-                        child: animeInfo.isEmpty ? Text('') : animeInfo == null ? Text('') : Image.network(animeInfo[0][4]),
+                        child: animeInfo.isEmpty ? Text('') : animeInfo == null ? Text('') : //Image.network(animeInfo[0][4]),
+                                                                                            FadeInImage.memoryNetwork(
+                                                                                              placeholder: kTransparentImage,
+                                                                                              image: animeInfo[0][4],
+                                                                                            ),
                       ),
                       Expanded(
                         flex: 4,
@@ -172,7 +310,7 @@ class _AnimeDetailState extends State<AnimeDetail> {
                             Text(animeInfo[0][1], 
                                 style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                fontSize: 20,
+                                fontSize: 18,
                                 color: Colors.black,
                               ),
                               textAlign: TextAlign.left
@@ -232,6 +370,14 @@ class _AnimeDetailState extends State<AnimeDetail> {
                               ),
                               textAlign: TextAlign.left
                             ),
+                            Text(animeInfo.isEmpty ? "":'Licensor: '+ (lcAnimeList.isEmpty ? "-": lcAnimeList[0]['licensor'] == 0 ? "-" : lcAnimeList[0]['licensor']), 
+                                style: TextStyle(
+                                fontWeight: FontWeight.normal,
+                                fontSize: 16,
+                                color: Colors.black,
+                              ),
+                              textAlign: TextAlign.left
+                            ),
                           ],
                         ),
                       ),
@@ -254,15 +400,17 @@ class _AnimeDetailState extends State<AnimeDetail> {
                       ),
                       Expanded(
                         flex: 90,
-                        child: animeInfo.isEmpty ? Text('') : 
-                            Text(animeInfo[0][6], 
-                                style: TextStyle(
-                                fontWeight: FontWeight.normal,
-                                fontSize: 16,
-                                color: Colors.black,
-                              ),
-                              textAlign: TextAlign.left
+                        child: animeInfo.isEmpty ? Text('') :
+                          ReadMoreText(
+                              animeInfo[0][6],
+                              trimLines: 5,
+                              colorClickableText: Colors.blue,
+                              trimMode: TrimMode.Line,
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.normal, color: Colors.black),
+                              moreStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.blue),
+                              lessStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.blue),
                             ),
+                            
                       ),
                       Expanded(
                         flex: 5,
@@ -273,18 +421,18 @@ class _AnimeDetailState extends State<AnimeDetail> {
                   SizedBox(
                     height: 10.0,
                   ),
-                  Row(
+                  availableLicensors.isEmpty ? Row():Row(
                       mainAxisAlignment: MainAxisAlignment.start,
                       crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Expanded(
                         flex: 5,
-                        child: Text(''),
+                        child: Row(),
                       ),
                       Expanded(
                         flex: 90,
-                        child: animeInfo.isEmpty ? Text('') : 
-                            Text('More info', 
+                        child: animeInfo.isEmpty ? Row() : 
+                            Text('Streaming services', 
                                 style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
@@ -299,13 +447,52 @@ class _AnimeDetailState extends State<AnimeDetail> {
                       ),
                     ],
                   ),
+                  animeInfo.isEmpty ?                   
+                  Row() : 
+                    availableLicensors.isEmpty ? 
+                    Row() : 
+                    Container(
+                      child: Column(
+                        children: _buildButtonsWithNames(),
+                      ),
+                    ),
+                  SizedBox(
+                    height: 10.0,
+                  ),
+                  Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Expanded(
+                        flex: 5,
+                        child: Text(''),
+                      ),
+                      Expanded(
+                        flex: 90,
+                        child: animeInfo.isEmpty ? Row() : 
+                            Text('More info', 
+                                style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                color: Colors.black,
+                              ),
+                              textAlign: TextAlign.left
+                            ),
+                      ),
+                      Expanded(
+                        flex: 5,
+                        child: Row(),
+                      ),
+                    ],
+                  ),
+
                   Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Expanded(
                         flex: 5,
-                        child: Text(''),
+                        child: Row(),
                       ),
                       Expanded(
                         flex: 44,
@@ -333,6 +520,7 @@ class _AnimeDetailState extends State<AnimeDetail> {
                       ),
                     ],
                   ),
+                  
                   SizedBox(
                     height: 25.0,
                   ),              

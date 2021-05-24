@@ -4,8 +4,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
+import 'package:readmore/readmore.dart';
 import 'package:requests/requests.dart';
+import 'package:transparent_image/transparent_image.dart';
 import 'animedetail.dart';
+import 'requesturl.dart';
 
 class LicensedAnime extends StatefulWidget {
   static const routeName = '/lcinfo';
@@ -27,10 +30,11 @@ class _LicensedAnimeState extends State<LicensedAnime> {
   var mediaformat = ['TV', 'TV_SHORT', 'MOVIE', 'SPECIAL', 'OVA', 'ONA'];
   List mediaStatus = ['FINISHED', 'RELEASING', 'NOT_YET_RELEASED'];
   List mediaSeson = ['WINTER', 'SPRING', 'SUMMER', 'FALL'];
-  List streamingService = ['musethyt', 'anioneyt', 'bilibili', 'aislay', 'flixer', 'iqiyi', 'netflix', 'iqiyi', 'trueid', 'pops', 'linetv', 'amazon', 'iflix'];
+  List streamingService = ['musethyt', 'anioneyt', 'bilibili', 'aislay', 'flixer', 'iqiyi', 'netflix', 'iqiyi', 'trueid', 'viu', 'pops', 'linetv', 'amazon', 'iflix'];
   int fetchPage;
   String queryState = "initdata";
   List lcAnimeList;
+  var requestURrl = RequestURL();
 
   List currentFilter;
   Widget _buildSearchField() {
@@ -55,7 +59,6 @@ class _LicensedAnimeState extends State<LicensedAnime> {
           onPressed: () {
             if (_searchQueryController == null ||
                 _searchQueryController.text.isEmpty) {
-              //Navigator.of(context, rootNavigator: true).pop();
               return;
             }
             _clearSearchQuery();
@@ -72,12 +75,6 @@ class _LicensedAnimeState extends State<LicensedAnime> {
       IconButton(
         icon: const Icon(Icons.filter_alt_outlined),
         onPressed: (){
-          // _dropDownAiringStatus = null;
-          // _dropDownType = null;
-          // _dropDownSeasonRelease = null;
-          // _dropDownYearRelease = null;
-          // _dropDownTypeIndex = null;
-          // _dropDownAiringStatusIndex = null;
           _filterDialog(context);
         },
       ),
@@ -97,7 +94,7 @@ class _LicensedAnimeState extends State<LicensedAnime> {
   void updateSearchQuery(String newQuery) {
     setState(() {
       searchQuery = newQuery;
-      //queryData();
+      searchLcAnime();
       debugPrint('updateSearchQuery');
     });
   }
@@ -127,8 +124,7 @@ class _LicensedAnimeState extends State<LicensedAnime> {
     queryState = "initData";
     lcAnimeList = new List();
     var json = {"page": 1, "perPage": 20};
-    var r = await Requests.post('http://shirakami.trueddns.com:60181/getlclist', json: json);
-    //var r = await Requests.post('http://192.168.1.57:8000/deleteanimelist', json: json);
+    var r = await Requests.post(requestURrl.getApiURL+'/getlclist', json: json);
     r.raiseForStatus();
     String rs1 = r.content();
     if (rs1 == "Page ended"){
@@ -141,9 +137,7 @@ class _LicensedAnimeState extends State<LicensedAnime> {
     if (this.mounted) {
       this.setState(() {
         var resp = jsonDecode(rs1);
-        //print(resp.toString());
         for (var str in resp) {
-          //debugPrint(str['title']['romaji']);
           lcAnimeList.add(str);
         }
         amountListView = lcAnimeList.length;
@@ -158,11 +152,9 @@ class _LicensedAnimeState extends State<LicensedAnime> {
     _loading = true;
     queryState = "initData";
     var json = {"page": fetchPage, "perPage": 20};
-    var r = await Requests.post('http://shirakami.trueddns.com:60181/getlclist', json: json);
-    //var r = await Requests.post('http://192.168.1.57:8000/deleteanimelist', json: json);
+    var r = await Requests.post(requestURrl.getApiURL+'/getlclist', json: json);
     r.raiseForStatus();
     String rs1 = r.content();
-    //print(rs1);
     if (rs1 == "Page ended"){
       this.setState(() {
           _loading = false;
@@ -173,9 +165,7 @@ class _LicensedAnimeState extends State<LicensedAnime> {
     if (this.mounted) {
       this.setState(() {
         var resp = jsonDecode(rs1);
-        //print(resp.toString());
         for (var str in resp) {
-          //debugPrint(str['title']['romaji']);
           lcAnimeList.add(str);
         }
         amountListView = lcAnimeList.length;
@@ -193,11 +183,9 @@ class _LicensedAnimeState extends State<LicensedAnime> {
     year == null? year = null : year = int.parse(year);
     currentFilter = [licensor, streamingServiceIndex, season, year, format];
     var json = {"licensor":licensor, "season":season, "year":year, "format":format, 'page': 1, 'perPage': 20};
-    var r = await Requests.post('http://shirakami.trueddns.com:60181/filterlclist', json: json);
-    //var r = await Requests.post('http://192.168.1.57:8000/deleteanimelist', json: json);
+    var r = await Requests.post(requestURrl.getApiURL+'/filterlclist', json: json);
     r.raiseForStatus();
     String rs1 = r.content();
-    //print(rs1);
     if (rs1 == "Page ended"){
       this.setState(() {
           _loading = false;
@@ -208,9 +196,7 @@ class _LicensedAnimeState extends State<LicensedAnime> {
     if (this.mounted) {
       this.setState(() {
         var resp = jsonDecode(rs1);
-        //print(resp.toString());
         for (var str in resp) {
-          //debugPrint(str['title']['romaji']);
           lcAnimeList.add(str);
         }
         amountListView = lcAnimeList.length;
@@ -224,8 +210,7 @@ class _LicensedAnimeState extends State<LicensedAnime> {
     _loading = true;
     queryState = "filterData";
     var json = {"licensor":licensor, "season":season, "year":year, "format":format, 'page': fetchPage, 'perPage': 20};
-    var r = await Requests.post('http://shirakami.trueddns.com:60181/filterlclist', json: json);
-    //var r = await Requests.post('http://192.168.1.57:8000/deleteanimelist', json: json);
+    var r = await Requests.post(requestURrl.getApiURL+'/filterlclist', json: json);
     r.raiseForStatus();
     String rs1 = r.content();
     if (rs1 == "Page ended"){
@@ -238,9 +223,7 @@ class _LicensedAnimeState extends State<LicensedAnime> {
     if (this.mounted) {
       this.setState(() {
         var resp = jsonDecode(rs1);
-        //print(resp.toString());
         for (var str in resp) {
-          //debugPrint(str['title']['romaji']);
           lcAnimeList.add(str);
         }
         amountListView = lcAnimeList.length;
@@ -249,6 +232,9 @@ class _LicensedAnimeState extends State<LicensedAnime> {
     }
     _loading = false;
   }
+
+
+  
   @override
   void initState() {
     super.initState();
@@ -258,22 +244,70 @@ class _LicensedAnimeState extends State<LicensedAnime> {
     scrollController = new ScrollController()..addListener(_scrollListener);
   }
 
+  searchLcAnime() async{
+    _loading = true;
+    fetchPage = 1;
+    lcAnimeList = new List();
+    queryState = "queryData";
+    var json = {"search":searchQuery, 'page': fetchPage, 'perPage': 20};
+    var r = await Requests.post(requestURrl.getApiURL+'/searchlclist', json: json);
+    r.raiseForStatus();
+    String rs1 = r.content();
+    if (rs1 == "Page ended"){
+      this.setState(() {
+          _loading = false;
+        }
+      );
+      return;
+    }
+    if (this.mounted) {
+      this.setState(() {
+        var resp = jsonDecode(rs1);
+        for (var str in resp) {
+          lcAnimeList.add(str);
+        }
+        amountListView = lcAnimeList.length;
+      });
+    }
+    print(lcAnimeList.length.toString());
+    _loading = false;
+  }
+
+  searchNextLcAnime() async{
+    _loading = true;
+    queryState = "queryData";
+    var json = {"search":searchQuery, 'page': fetchPage, 'perPage': 20};
+    var r = await Requests.post(requestURrl.getApiURL+'/searchlclist', json: json);
+    r.raiseForStatus();
+    String rs1 = r.content();
+    if (rs1 == "Page ended"){
+      this.setState(() {
+          _loading = false;
+        }
+      );
+      return;
+    }
+    if (this.mounted) {
+      this.setState(() {
+        var resp = jsonDecode(rs1);
+        for (var str in resp) {
+          lcAnimeList.add(str);
+        }
+        amountListView = lcAnimeList.length;
+        
+      });
+    }
+    _loading = false;
+  }
+
   @override
   void dispose() {
-    // Clean up the controller when the widget is disposed.
     textController.dispose();
     scrollController.removeListener(_scrollListener);
     super.dispose();
   }
 
   void _scrollListener() {
-    // print(scrollController.position.extentAfter);
-    // if (scrollController.position.extentAfter < 500) {
-    //   setState(() {
-    //     lcAnimeList.addAll(new List.generate(42, (index) => 'Inserted $index'));
-    //   });
-    // }
-   
       if (scrollController.position.pixels ==
           scrollController.position.maxScrollExtent) {
           fetchPage++;        
@@ -285,6 +319,7 @@ class _LicensedAnimeState extends State<LicensedAnime> {
               break;
 
             case "queryData":
+              searchNextLcAnime();
               setState(() {
 
               });
@@ -297,22 +332,7 @@ class _LicensedAnimeState extends State<LicensedAnime> {
               break;
 
           }
-          
-          // setState(() {
-          //   if (amountListView + 20 > lcAnimeList.length) {
-          //   } else if (amountListView + 20 > lcAnimeList.length) {
-          //     runLoading();
-          //     amountListView = amountListView + 20 - lcAnimeList.length;
-          //   } else {
-          //     runLoading();
-          //     amountListView = amountListView + 20;
-          //   }
-
-
-          // });
         }
-      
-    
   }
 
   queryId(method, animeid, episode, status, rating, romaji, imgurl, context) async {
@@ -340,19 +360,14 @@ class _LicensedAnimeState extends State<LicensedAnime> {
                       }
               }''';
     var json = {'query': query, 'variables': variables};
-    //debugPrint(jsonEncode(json));
     var client = http.Client();
-    // make POST request
     var response =
         await client.post(url, headers: headers, body: jsonEncode(json));
-    // check the status code for the result
     var searchList = {};
     if (this.mounted) {
       this.setState(() {
         
         searchList = jsonDecode(response.body);
-        // print(jsonDecode(response.body));
-        //print(jsonEncode(searchList));
         if (searchList['data'] != null) {
             malid = searchList['data']['Media']['idMal'];
             totaleps = searchList['data']['Media']['episodes'];
@@ -402,15 +417,9 @@ class _LicensedAnimeState extends State<LicensedAnime> {
         }
         episode = int.parse(episode);
         rating = int.parse(rating);
-        addTodb(animeid, episode, status, rating, malid, romaji, imgurl,
-            totaleps);
+        addTodb(animeid, episode, status, rating, malid, romaji, imgurl, totaleps);
 
-        //after add anime
         Navigator.of(context, rootNavigator: true).pop();
-        // debugPrint(animeid.toString());
-        // debugPrint(episode);
-        // debugPrint(status);
-        // debugPrint(rating);
 
         textController.text = "";
         _dropDownStatus = null;
@@ -432,8 +441,7 @@ class _LicensedAnimeState extends State<LicensedAnime> {
       'imgurl': imgurl,
       'totaleps': totaleps
     };
-    var r = await Requests.post('http://shirakami.trueddns.com:60181/addanime', json: json);
-    //var r = await Requests.post('http://192.168.1.57:8000/addanime', json: json);
+    var r = await Requests.post(requestURrl.getApiURL+'/addanime', json: json);
     r.raiseForStatus();
     String rs1 = r.content();
   }
@@ -452,13 +460,10 @@ class _LicensedAnimeState extends State<LicensedAnime> {
         episode = int.parse(episode);
         rating = int.parse(rating);
         updatedb(animeid, listid, status, episode, rating, totaleps);
-
-        //after add anime
         
         textController.text = "";
         _dropDownStatus = null;
         rating = null;
-        //Navigator.of(context, rootNavigator: true).pop();
       }
     }
   }
@@ -474,24 +479,21 @@ class _LicensedAnimeState extends State<LicensedAnime> {
       'totaleps': totaleps
     };
 
-    var r = await Requests.post('http://shirakami.trueddns.com:60181/updateanimelist', json: json);
-    //var r = await Requests.post('http://192.168.1.57:8000/updateanimelist', json: json);
+    var r = await Requests.post(requestURrl.getApiURL+'/updateanimelist', json: json);
     r.raiseForStatus();
     String rs1 = r.content();
   }
 
   deletedb(listid) async {
     var json = {'listid': listid, 'uid': 0};
-    var r = await Requests.post('http://shirakami.trueddns.com:60181/deleteanimelist', json: json);
-    //var r = await Requests.post('http://192.168.1.57:8000/deleteanimelist', json: json);
+    var r = await Requests.post(requestURrl.getApiURL+'/deleteanimelist', json: json);
     r.raiseForStatus();
     String rs1 = r.content();
   }
 
   checkMyList(context, animeData) async {
     _loading = true;
-    var r = await Requests.get('http://shirakami.trueddns.com:60181/getanimelist');
-    //var r = await Requests.get('http://192.168.1.57:8000/getanimelist');
+    var r = await Requests.get(requestURrl.getApiURL+'/getanimelist');
     r.raiseForStatus();
     String rs1 = r.content();
     int listid;
@@ -499,7 +501,6 @@ class _LicensedAnimeState extends State<LicensedAnime> {
       this.setState(() {
         var resp = jsonDecode(rs1);
         for (var str in resp) {
-          //debugPrint(str['title']['romaji']);
           if(animeData['id'] == str['anilistid']){
             listid = str['listid'];
             textController.text = str['episode'].toString(); //after add anime
@@ -796,20 +797,12 @@ class _LicensedAnimeState extends State<LicensedAnime> {
   int _dropDownAiringStatusIndex;
   int _dropDownSeasonReleaseIndex;
   int _dropDownstreamingServiceIndex;
-  List streamingServiceView = ['Muse Thailand (Youtube)', 'Ani-One Asia (Youtube)', 'BiliBili', 'AIS Play', 'FLIXER', 'iQiyi', 'Netflix', 'WeTV', 'TrueID', 'POPS', 'LINE TV', 'Amazon', 'iflix'];
+  List streamingServiceView = ['Muse Thailand (Youtube)', 'Ani-One Asia (Youtube)', 'BiliBili', 'AIS Play', 'FLIXER', 'iQiyi', 'Netflix', 'WeTV', 'TrueID', 'Viu', 'POPS', 'LINE TV', 'Amazon', 'iflix'];
   List formatView = ['TV', 'TV Short', 'Movie', 'Special', 'OVA', 'ONA'];
   List statusView = ['Finished', 'Airing', 'Not yet release'];
   List seasonView = ['Winter', 'Spring', 'Summer', 'Fall'];
 
   Future _filterDialog(context) async {
-    //  _dropDownLicensor = null;
-    //  _dropDownType = null;
-    //  _dropDownSeasonRelease = null;
-    //  _dropDownYearRelease = null;
-    //  _dropDownTypeIndex = null;
-    //  _dropDownAiringStatusIndex = null;
-    //  _dropDownSeasonReleaseIndex = null;
-    //  _dropDownstreamingService = null;
     return showDialog<void>(
       context: context,
       builder: (BuildContext context) {
@@ -840,16 +833,6 @@ class _LicensedAnimeState extends State<LicensedAnime> {
                       onChanged: (val) {
                         setState(() {
                             _dropDownLicensor = val;
-                            // _dropDownAiringStatusIndex = statusView.indexOf(val);
-                            // if(_dropDownStatus == 'Completed' && animeList[index][2] != null){
-                            //   textController.text = animeList[index][2].toString();
-                            // }
-                            // else if(_dropDownStatus == 'Considering'){
-                            //   textController.text = "0";
-                            // }
-                            // else{
-                            //   textController.text = "";
-                            // }
                           },
                         );
                       },
@@ -857,10 +840,10 @@ class _LicensedAnimeState extends State<LicensedAnime> {
                     SizedBox(
                       height: 10.0,
                     ),
-                    Text('Streaming Service', textAlign: TextAlign.left),
+                    Text('Streaming service', textAlign: TextAlign.left),
                     DropdownButton(
                       value: _dropDownstreamingService,
-                      hint: Text('Streaming Service'),
+                      hint: Text('Streaming service'),
                       isExpanded: true,
                       iconSize: 30.0,
                       style: TextStyle(color: Colors.blue),
@@ -876,15 +859,6 @@ class _LicensedAnimeState extends State<LicensedAnime> {
                         setState(() {
                             _dropDownstreamingService = val;
                             _dropDownstreamingServiceIndex = streamingServiceView.indexOf(val);
-                            // if(_dropDownStatus == 'Completed' && animeList[index][2] != null){
-                            //   textController.text = animeList[index][2].toString();
-                            // }
-                            // else if(_dropDownStatus == 'Considering'){
-                            //   textController.text = "0";
-                            // }
-                            // else{
-                            //   textController.text = "";
-                            // }
                           },
                         );
                       },
@@ -911,15 +885,6 @@ class _LicensedAnimeState extends State<LicensedAnime> {
                         setState(() {
                             _dropDownType = val;
                             _dropDownTypeIndex = formatView.indexOf(val);
-                            // if(_dropDownStatus == 'Completed' && animeList[index][2] != null){
-                            //   textController.text = animeList[index][2].toString();
-                            // }
-                            // else if(_dropDownStatus == 'Considering'){
-                            //   textController.text = "0";
-                            // }
-                            // else{
-                            //   textController.text = "";
-                            // }
                           },
                         );
                       },
@@ -946,15 +911,6 @@ class _LicensedAnimeState extends State<LicensedAnime> {
                         setState(() {
                             _dropDownSeasonRelease = val;
                             _dropDownSeasonReleaseIndex = seasonView.indexOf(val);
-                            // if(_dropDownStatus == 'Completed' && animeList[index][2] != null){
-                            //   textController.text = animeList[index][2].toString();
-                            // }
-                            // else if(_dropDownStatus == 'Considering'){
-                            //   textController.text = "0";
-                            // }
-                            // else{
-                            //   textController.text = "";
-                            // }
                           },
                         );
                       },
@@ -980,15 +936,6 @@ class _LicensedAnimeState extends State<LicensedAnime> {
                       onChanged: (val) {
                         setState(() {
                             _dropDownYearRelease = val;
-                            // if(_dropDownStatus == 'Completed' && animeList[index][2] != null){
-                            //   textController.text = animeList[index][2].toString();
-                            // }
-                            // else if(_dropDownStatus == 'Considering'){
-                            //   textController.text = "0";
-                            // }
-                            // else{
-                            //   textController.text = "";
-                            // }
                           },
                         );
                       },
@@ -1043,7 +990,7 @@ class _LicensedAnimeState extends State<LicensedAnime> {
           break;
         
         case "queryData":
-          //queryData();
+          searchLcAnime();
           break;
 
         case "filterData":
@@ -1081,12 +1028,15 @@ class _LicensedAnimeState extends State<LicensedAnime> {
                     height: 150,
                     child: Card(
                       child: InkWell(
-                        //color: Colors.orange,
                         child: Row(
                           children: [
                             Expanded(
                               flex: 33,
-                              child: Image.network(lcAnimeList[index]['imgurl']),
+                              child: //Image.network(lcAnimeList[index]['imgurl']),
+                              FadeInImage.memoryNetwork(
+                                placeholder: kTransparentImage,
+                                image: lcAnimeList[index]['imgurl'],
+                              ),
                             ),
                             Expanded(
                               flex: 66,
@@ -1097,13 +1047,15 @@ class _LicensedAnimeState extends State<LicensedAnime> {
                                   ),
                                   Align(
                                     alignment: Alignment.topLeft,
-                                    child: new Text(lcAnimeList[index]['romaji'],
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                          color: Colors.black,
-                                        ),
-                                        textAlign: TextAlign.left),
+                                    child: ReadMoreText(
+                                      lcAnimeList[index]['romaji'] ,
+                                      trimLines: 3,
+                                      trimMode: TrimMode.Line,
+                                      trimCollapsedText: ' ',
+                                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black),
+                                      
+                                    ),
+                                    
                                   ),
                                   SizedBox(
                                     height: 10.0,
@@ -1153,16 +1105,9 @@ class _LicensedAnimeState extends State<LicensedAnime> {
                                             break;
 
                                           case 1:
-                                            // textController.text = animeList[index][5].toString(); //after add anime
-                                            // _dropDownStatus = animeList[index][4];
-                                            // _dropDownRating = animeList[index][6].toString();
                                             print("grg;rtkg,;rt"+lcAnimeList[index]['anilistid'].toString());
                                             queryId("queryAnime", lcAnimeList[index]['anilistid'], null, null, null, lcAnimeList[index]['romaji'], lcAnimeList[index]['imgurl'], context);
                                             break;
-
-                                          // case 2:
-                                          //   //deletedb(myList[index][0]);
-                                          //   break;
                                         }
                                       },
                                     ),
@@ -1174,12 +1119,6 @@ class _LicensedAnimeState extends State<LicensedAnime> {
                           ],
                         ),
                         onTap: () {
-                          // print(animeList[index][0].toString());
-                          // Navigator.push(
-                          //   context,
-                          //   MaterialPageRoute(builder: (context) => AnimeDetail(animeList[index][0])),
-                          // );
-                          //_showDialog(context, index);
                           Navigator.push(
                             context,
                             MaterialPageRoute(builder: (context) => AnimeDetail(lcAnimeList[index]['anilistid'])),

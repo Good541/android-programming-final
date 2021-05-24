@@ -34,6 +34,13 @@ dependencies:
   page_transition: ^1.1.6
   html: ^0.15.0
   flutter_web_browser: "^0.14.0"
+  readmore: ^2.0.0
+  external_app_launcher: ^0.0.1
+  android_intent: ^2.0.0
+  device_apps: ^2.1.1
+  url_launcher: ^5.4.2
+  transparent_image: ^2.0.0
+  change_app_package_name: ^1.0.0
   flutter:
     sdk: flutter
 

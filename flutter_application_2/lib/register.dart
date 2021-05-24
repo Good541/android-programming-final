@@ -3,15 +3,35 @@ import 'package:flutter/services.dart';
 import 'package:requests/requests.dart';
 import 'requesturl.dart';
 import 'main.dart';
-import 'register.dart';
 
-class Login extends StatefulWidget {
+class Register extends StatefulWidget {
   @override
-  _LoginState createState() => _LoginState();
+  _RegisterState createState() => _RegisterState();
 }
 
-class _LoginState extends State<Login> {
-  login(uname, pwd, context) async{
+class _RegisterState extends State<Register> {
+  bool _passwordVisible = false;
+
+
+  login(uname, pwd,) async{
+    var requestURrl = RequestURL();
+    var json = {
+      'uname': uname,
+      'pwd': pwd,
+      'rememberme': 'y'
+    };
+    try {
+      var r = await Requests.post(requestURrl.getApiURL+"/login", json: json);
+      r.raiseForStatus();
+      String rs = r.content();
+      print(rs);
+    }
+    catch(e){
+      print(e);
+    }
+  }
+
+  register(uname, pwd) async{
     var requestURrl = RequestURL();
     var json = {
       'uname': uname,
@@ -20,9 +40,10 @@ class _LoginState extends State<Login> {
     };
     String rs;
     try {
-      var r = await Requests.post(requestURrl.getApiURL+"/login", json: json);
+      var r = await Requests.post(requestURrl.getApiURL+"/signup", json: json);
       r.raiseForStatus();
       rs = r.content();
+      print(rs);
     }
     catch(e){
       print(e);
@@ -30,12 +51,12 @@ class _LoginState extends State<Login> {
     return rs;
   }
 
-  loginDialog(context, status){
+  registerDialog(context, status){
     return showDialog<void>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("Login warning"),
+          title: Text("Register warning"),
           content: SingleChildScrollView(
             child: StatefulBuilder(
               builder: (BuildContext context, StateSetter setState) {
@@ -63,13 +84,12 @@ class _LoginState extends State<Login> {
   }
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
-  bool _passwordVisible = false;
-  //String loginStatus;
-@override
+  @override
   Widget build(BuildContext context) {
 
-    
-    final logo = Text('Login', 
+  
+    final logo = 
+      Text('Register', 
           style: TextStyle(
           fontWeight: FontWeight.normal,
           fontSize: 30,
@@ -77,11 +97,13 @@ class _LoginState extends State<Login> {
         ),
         textAlign: TextAlign.center
       );
+    
 
     final username = TextField(
       keyboardType: TextInputType.emailAddress,
       autofocus: false,
       controller: usernameController,
+      // initialValue: 'alucard@gmail.com',
       decoration: InputDecoration(
         hintText: 'Username',
         contentPadding: EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
@@ -91,6 +113,7 @@ class _LoginState extends State<Login> {
 
     final password = TextFormField(
       autofocus: false,
+      // initialValue: 'some password',
       obscureText: !_passwordVisible,
       controller: passwordController,
       decoration: InputDecoration(
@@ -115,40 +138,45 @@ class _LoginState extends State<Login> {
       ),
     );
 
-    final loginButton = Padding(
+    final registerButton = Padding(
       padding: EdgeInsets.symmetric(vertical: 16.0),
       child: RaisedButton(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24),
         ),
-        onPressed: () async {
-          String rs = await login(usernameController.text, passwordController.text, context);
+        onPressed: () async{
+          //register(usernameController.text, passwordController.text, context);
+          String rs = await register(usernameController.text, passwordController.text);
           print(rs);
-          if (rs == "Login successful" || rs == "Authorized"){
+          print(rs);
+          if (rs == "Register successful"){
+            await login(usernameController.text, passwordController.text);
+            Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => MyApp()));
+          }
+          else if(rs == "Authorized"){
+            registerDialog(context, "You're already login. If you want to create new account, please restart app and try again");
             Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => MyApp()));
           }
           else
-            loginDialog(context, rs);
+            registerDialog(context, rs);
         },
         padding: EdgeInsets.all(12),
         color: Colors.lightBlueAccent,
-        child: Text('Log In', style: TextStyle(color: Colors.white)),
+        child: Text('Register', style: TextStyle(color: Colors.white)),
       ),
     );
 
-    final registerLabel = FlatButton(
+    final goLoginPage = FlatButton(
       child: Text(
-        'Register',
+        'Log in with exist account',
         style: TextStyle(color: Colors.black54),
       ),
       onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => Register())
-        );
-      
+        Navigator.of(context, rootNavigator: false).pop();
       },
     );
     final skipLoginLabel = FlatButton(
@@ -158,9 +186,9 @@ class _LoginState extends State<Login> {
       ),
       onPressed: () {
         Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => MyApp()),
-      );
+          context,
+          MaterialPageRoute(builder: (context) => MyApp()),
+       );
       },
     );
     return Scaffold(
@@ -176,9 +204,8 @@ class _LoginState extends State<Login> {
             SizedBox(height: 8.0),
             password,
             SizedBox(height: 24.0),
-            loginButton,
-            registerLabel,
-            skipLoginLabel,
+            registerButton,
+            goLoginPage,
           ],
         ),
       ),

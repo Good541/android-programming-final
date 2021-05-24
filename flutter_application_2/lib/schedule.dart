@@ -4,8 +4,10 @@ import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:requests/requests.dart';
 import 'package:flutter/material.dart';
+import 'package:transparent_image/transparent_image.dart';
 import 'animedetail.dart';
- 
+import 'requesturl.dart';
+
 class Schedule extends StatefulWidget {
     static const routeName = '/schedule';
  
@@ -17,15 +19,16 @@ class Schedule extends StatefulWidget {
 
 class _ScheduleState extends State<Schedule> {
   
-String _dropDownStatus;
-String _dropDownRating;
-final textController = TextEditingController();
-ScrollController scrollController;
-int amountListView = 20;
-List today = new List();
-List tomorrow = new List();
-bool _loading = false;
-int page = 1;
+    String _dropDownStatus;
+    String _dropDownRating;
+    final textController = TextEditingController();
+    ScrollController scrollController;
+    int amountListView = 20;
+    List today = new List();
+    List tomorrow = new List();
+    bool _loading = false;
+    int page = 1;
+    var requestURrl = RequestURL();
 
     void runLoading(){
       setState(() {
@@ -106,11 +109,8 @@ int page = 1;
           }
           ''';
         var json = {'query': query, 'variables': variables};
-        //debugPrint(jsonEncode(json));
         var client = http.Client();
-        // make POST request
         var response = await client.post(url, headers: headers, body: jsonEncode(json));
-        // check the status code for the result
         if(this.mounted) {
           this.setState(() {
             var searchList = {};
@@ -188,11 +188,8 @@ int page = 1;
           }
           ''';
         var json = {'query': query, 'variables': variables};
-        //debugPrint(jsonEncode(json));
         var client = http.Client();
-        // make POST request
         var response = await client.post(url, headers: headers, body: jsonEncode(json));
-        // check the status code for the result
         if(this.mounted) {
           this.setState(() {
             var searchList = {};
@@ -251,10 +248,6 @@ int page = 1;
 
         //after add anime
         Navigator.of(context, rootNavigator: true).pop();
-        // debugPrint(animeid.toString());
-        // debugPrint(episode);
-        // debugPrint(status);
-        // debugPrint(rating);
 
         textController.text = "";
         _dropDownStatus = null;
@@ -277,8 +270,7 @@ int page = 1;
       'imgurl': imgurl,
       'totaleps': totaleps
     };
-    var r = await Requests.post('http://shirakami.trueddns.com:60181/addanime', json: json);
-    //var r = await Requests.post('http://192.168.1.57:8000/addanime', json: json);
+    var r = await Requests.post(requestURrl.getApiURL+'/addanime', json: json);
     r.raiseForStatus();
     String rs1 = r.content();
   }
@@ -319,24 +311,21 @@ int page = 1;
       'totaleps': totaleps
     };
 
-    var r = await Requests.post('http://shirakami.trueddns.com:60181/updateanimelist', json: json);
-    //var r = await Requests.post('http://192.168.1.57:8000/updateanimelist', json: json);
+    var r = await Requests.post(requestURrl.getApiURL+'/updateanimelist', json: json);
     r.raiseForStatus();
     String rs1 = r.content();
   }
 
   deletedb(listid) async {
     var json = {'listid': listid, 'uid': 0};
-    var r = await Requests.post('http://shirakami.trueddns.com:60181/deleteanimelist', json: json);
-    //var r = await Requests.post('http://192.168.1.57:8000/deleteanimelist', json: json);
+    var r = await Requests.post(requestURrl.getApiURL+'/deleteanimelist', json: json);
     r.raiseForStatus();
     String rs1 = r.content();
   }
 
   checkMyList(context, animeData) async {
     _loading = true;
-    var r = await Requests.get('http://shirakami.trueddns.com:60181/getanimelist');
-    //var r = await Requests.get('http://192.168.1.57:8000/getanimelist');
+    var r = await Requests.get(requestURrl.getApiURL+'/getanimelist');
     r.raiseForStatus();
     String rs1 = r.content();
     int listid;
@@ -344,7 +333,6 @@ int page = 1;
       this.setState(() {
         var resp = jsonDecode(rs1);
         for (var str in resp) {
-          //str['id'], date, str['episode'], str['media']['id'], str['media']['idMal'], str['media']['episodes'], str['media']['title']['romaji'], str['media']['coverImage']['extraLarge']
           if(animeData[3] == str['anilistid']){
             listid = str['listid'];
             textController.text = str['episode'].toString(); //after add anime
@@ -608,6 +596,29 @@ int page = 1;
     );
   }
 
+  // countdownAiring(DateTime airingDate){
+  //   print(airingDate.difference(DateTime.now()).inMinutes.toString());
+  //   print(DateTime.now().isAfter(airingDate).toString());
+  //   String airstatus;
+  //   if(airingDate.difference(DateTime.now()).inMinutes < 30 && airingDate.difference(DateTime.now()).inMinutes >= 0){
+  //     setState(() {
+  //       airstatus = "Airing status: Airing";
+  //     });
+  //     return airstatus;
+  //   }
+  //   else if(airingDate.difference(DateTime.now()).inMinutes > 30){
+  //     airstatus = "Airing status: "+airingDate.difference(DateTime.now()).toString();
+  //     return airstatus;
+  //   }
+  //   else {
+  //     airstatus = "Airing status: Finished";
+  //     return airstatus;
+  //   }
+      
+    
+
+  // }
+
   Future<void> _pullRefresh() async {
     setState(() {
       today = new List();
@@ -640,6 +651,7 @@ int page = 1;
                     onRefresh: _pullRefresh,
                     child: 
                       new ListView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(),
                         controller: scrollController,
                         itemCount: today == null ? 0 : today.length,
                         itemBuilder: (BuildContext context, int index){
@@ -652,7 +664,11 @@ int page = 1;
                                 children: [
                                   Expanded(
                                     flex: 33,
-                                    child: Image.network(today[index][7]),
+                                    child: //Image.network(today[index][7]),
+                                      FadeInImage.memoryNetwork(
+                                        placeholder: kTransparentImage,
+                                        image: today[index][7],
+                                      ),
                                   ),
                                   Expanded(
                                     flex: 66,
@@ -669,23 +685,24 @@ int page = 1;
                                         ),
                                     //),
                                         SizedBox(
-                                          height: 10.0,
+                                          height: 15.0,
                                         ),
-                                    // Expanded( 
-                                    //   child: 
+                                        // Align(
+                                        //   alignment: Alignment.centerLeft,
+                                        //   child: new Text(countdownAiring(today[index][1]), 
+                                        //   textAlign: TextAlign.left),
+                                        // ),
                                         Align(
                                             alignment: Alignment.centerLeft,
-                                            child: new Text("At: "+today[index][1].toString(), 
-                                                            //style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16,), 
+                                            child: new Text("At: "+today[index][1].hour.toString()+":"+(today[index][1].minute.toString() == "0"? "00" : today[index][1].minute.toString()), 
                                                             textAlign: TextAlign.left),
                                         ),
-                                    //),
-                                    //Expanded( 
-                                    //  child: 
+                                        SizedBox(
+                                          height: 2.0,
+                                        ),
                                         Align(
                                             alignment: Alignment.centerLeft,
-                                            child: new Text("Ep: "+today[index][2].toString(), 
-                                                            //style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16,), 
+                                            child: new Text("Ep: "+today[index][2].toString()+"/"+(today[index][5] == null? "-" : today[index][5].toString()), 
                                                             textAlign: TextAlign.left),
                                         ),
                                       ],
@@ -720,15 +737,8 @@ int page = 1;
                                                   break;
 
                                                 case 1:
-                                                  // textController.text = myList[index][5].toString(); //after add anime
-                                                  // _dropDownStatus = myList[index][4];
-                                                  // _dropDownRating = myList[index][6].toString();
                                                   checkMyList(context, today[index]);
                                                   break;
-
-                                                // case 2:
-                                                //   //deletedb(myList[index]['listid']);
-                                                //   break;
                                               }
                                             },
                                           ),
@@ -756,6 +766,7 @@ int page = 1;
                       onRefresh: _pullRefresh,
                       child: 
                         new ListView.builder(
+                          physics: const AlwaysScrollableScrollPhysics(),
                           controller: scrollController,
                           itemCount: tomorrow == null ? 0 : tomorrow.length,
                           itemBuilder: (BuildContext context, int index){
@@ -763,20 +774,20 @@ int page = 1;
                               height: 150,
                               child: Card(
                                 child: InkWell(
-                                //color: Colors.orange,
                                 child: Row(
                                   children: [
                                     Expanded(
                                       flex: 33,
-                                      child: Image.network(tomorrow[index][7]),
+                                      child: //Image.network(tomorrow[index][7]),
+                                      FadeInImage.memoryNetwork(
+                                        placeholder: kTransparentImage,
+                                        image: tomorrow[index][7],
+                                      ),
                                     ),
                                     Expanded(
                                       flex: 66,
                                       child: Column(
-                                        children: [
-                                          //Expanded( 
-                                            //child:
-                                            //                                
+                                        children: [                            
                                               SizedBox(
                                                 height: 10.0,
                                               ), 
@@ -786,21 +797,14 @@ int page = 1;
                                                                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16,), 
                                                                   textAlign: TextAlign.left),
                                               ),
-                                          //),
                                               SizedBox(
                                                 height: 10.0,
                                               ),
-                                          // Expanded( 
-                                          //   child: 
                                               Align(
                                                   alignment: Alignment.centerLeft,
                                                   child: new Text("At: "+tomorrow[index][1].toString(), 
-                                                                  //style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16,), 
                                                                   textAlign: TextAlign.left),
                                               ),
-                                          //),
-                                          //Expanded( 
-                                          //  child: 
                                               Align(
                                                   alignment: Alignment.centerLeft,
                                                   child: new Text("Ep: "+tomorrow[index][2].toString(), 
@@ -840,15 +844,8 @@ int page = 1;
                                             break;
 
                                           case 1:
-                                            // textController.text = myList[index][5].toString(); //after add anime
-                                            // _dropDownStatus = myList[index][4];
-                                            // _dropDownRating = myList[index][6].toString();
                                             checkMyList(context, tomorrow[index]);
                                             break;
-
-                                          // case 2:
-                                          //   //deletedb(myList[index]['listid']);
-                                          //   break;
                                         }
                                       },
                                     ),

@@ -197,3 +197,24 @@ class Managedb():
     # df = pd.DataFrame(myresult, columns=['listid','uid','anilistid','malid','status','episode','rating','romaji'])
 
     return myresult
+
+  def readlcbyid(self, anilistid):
+    mydb = mysql.connector.connect(
+      host="localhost",
+      port = 3306,
+      user="root",
+      password="75429",
+      database="android"
+    )
+
+    mycursor = mydb.cursor()
+    record = (anilistid,)
+    mycursor.execute("SELECT * FROM animelicenseinfo where anilistid = %s", record)
+    myresult = mycursor.fetchall()
+    # for x in myresult:
+    #   print(x)
+    # print(myresult)
+    # print(type(myresult))
+    # df = pd.DataFrame(myresult, columns=['listid','uid','anilistid','malid','status','episode','rating','romaji'])
+
+    return myresult

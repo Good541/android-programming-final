@@ -1,11 +1,11 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_application_2/retry.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:requests/requests.dart';
 import 'main.dart';
 import 'retry.dart';
-                                              
+import 'requesturl.dart';
+import 'login.dart';
+
 class SplashPage extends StatefulWidget {
   @override
   _SplashPageState createState() => _SplashPageState();
@@ -13,6 +13,7 @@ class SplashPage extends StatefulWidget {
 
 class _SplashPageState extends State<SplashPage> {
   bool _loading = false;
+  var requestURrl = RequestURL();
   @override
   void initState() {
     super.initState();
@@ -22,8 +23,7 @@ class _SplashPageState extends State<SplashPage> {
     _loading= true;
     String rs1;
     try {
-      var r = await Requests.get('http://shirakami.trueddns.com:60181/loginstatus');
-      //var r = await Requests.get('http://192.168.1.57:8000/loginstatus');
+      var r = await Requests.get(requestURrl.getApiURL+'/loginstatus');
       r.raiseForStatus();
       rs1 = r.content();
       print(rs1);
@@ -65,17 +65,10 @@ class _SplashPageState extends State<SplashPage> {
             child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
-                  CircleAvatar(
-                  //backgroundImage: avatarImg == null? avatarImg: MemoryImage(avatarImg),
-                  radius: 50.0,
-                  ),
-                  SizedBox(
-                    height: 10.0,
-                  ),
                   _loading
                   ? Container(
                       child: Center(
-                      child: CircularProgressIndicator(),
+                      child: CircularProgressIndicator(valueColor: new AlwaysStoppedAnimation<Color>(Colors.blue)),
                     ))
                   : Container(),
                 ],

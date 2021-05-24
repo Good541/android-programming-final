@@ -81,29 +81,35 @@ def login():
     form = LoginForm()
 
     content = request.get_json(silent=True)
+    # if content['uname'] == None or content['pwd'] == None:
+    #     return "Username and password can't be black"
     remember = BooleanField(content['rememberme'])
     print(content)
     for x in FORBIDDEN_STRING:
         if content['uname'].find(x) > -1:
-            warning = 'username must not contain spacebar and any of the follow characters: \", \\, /, :, ?, *, <, >, |'
+            warning = 'Username must not contain spacebar and any of the follow characters: \", \\, /, :, ?, *, <, >, |'
             return warning
     user = Userdata.query.filter_by(uname=content['uname']).first()
     if user:
         if check_password_hash(user.pwd, content['pwd']):
             login_user(user,  remember=form.remember.data)
             print("Successful")
-            return "Successful"
-    warning = 'username or password is incorrect'
+            return "Login successful"
+    warning = 'Username or password is incorrect'
     print(warning)
     return warning
 
 @app.route('/signup', methods=['POST'])
 def signup():
+    if current_user.is_authenticated:
+        return "Already login"
     form = RegisterForm()
     content = request.get_json(silent=True)
+    if len(content['uname']) < 5 and len(content['pwd']) < 5:
+        return 'Username and password must contain 5 character or more'
     for x in FORBIDDEN_STRING:
         if content['uname'].find(x) > -1:
-            warning = 'username must not contain spacebar and any of the follow characters: \", \\, /, :, ?, *, <, >, |'
+            warning = 'Username must not contain spacebar and any of the follow characters: \", \\, /, :, ?, *, <, >, |'
             return warning
     hashed_password = generate_password_hash(content['pwd'], method='sha256')
     readuser = Managedb()
@@ -124,13 +130,15 @@ def signup():
     new_user = Userdata(uid=newuseruid, uname=content['uname'], pwd=hashed_password)
     db.session.add(new_user)
     db.session.commit()
-
-    return 'New user has been created!'
+    print("suc")
+    return 'Register successful'
 
 @app.route('/changepassword', methods=['POST'])
 @login_required
 def changepassword():
     content = request.get_json(silent=True)
+    if len(content['newpwd']) < 5:
+        return 'Username and password must contain 5 character or more'
     print(content)
     if check_password_hash(current_user.pwd, content['oldpwd']):
         hashed_password = generate_password_hash(content['newpwd'], method='sha256')
@@ -228,7 +236,7 @@ def getlclist():
      'iqiyi','flixer','wetv','trueid', 'viu','pops', 'linetv',
       'amazon', 'iflix'])
 
-    df = df.sort_values(by=['year'], ascending=True, ignore_index=True)
+    df = df.sort_values(by=['year'], ascending=False, ignore_index=True)
     df = df.fillna(0)
 
     if len(df.index) - 1 < firstIndex:
@@ -242,12 +250,90 @@ def getlclist():
 
     return jsonify(json)
 
+@app.route('/getlcbyid', methods = ['POST'])
+def getlcbyid():
+    # if request.method == 'POST':
+    content = request.get_json(silent=True)
+    # firstIndex = content['page'] * content['perPage'] - content['perPage']
+    # lastIndex = firstIndex + content['perPage'] - 1
+    content = {k: v for k, v in content.items() if v is not None}
+    getnaimelist = Managedb()
+    
+    df = pd.DataFrame(getnaimelist.readlcbyid(content['anilistid']), 
+    columns = ['animelicenseid','anilistid','romaji',
+    'season','year','format', 'imgurl','licensor','musethyt',
+     'bilibili', 'aisplay','netflix','anioneyt',
+     'iqiyi','flixer','wetv','trueid', 'viu','pops', 'linetv',
+      'amazon', 'iflix'])
+
+    # df = df.sort_values(by=['year'], ascending=True, ignore_index=True)
+    df = df.fillna(0)
+
+    # if len(df.index) - 1 < firstIndex:
+    #     return "Page ended"
+    # if(len(df.index) - 1 < lastIndex):
+    #     lastIndex = len(df.index) - 1
+    # df = df.loc[firstIndex:lastIndex]
+
+    json = df.to_dict('records')
+    print(type(json))
+
+    return jsonify(json)
+
+@app.route('/searchlclist', methods = ['POST'])
+def searchlclist():
+    # if request.method == 'POST':
+    content = request.get_json(silent=True)
+    try:
+        print(content['search'])
+        print(content['perPage'])
+        print(content['page'])
+    except:
+        print("Value error")
+        return "Value error"
+    firstIndex = content['page'] * content['perPage'] - content['perPage']
+    lastIndex = firstIndex + content['perPage'] - 1
+    content = {k: v for k, v in content.items() if v is not None}
+
+    if content['search'] == None:
+        return jsonify([])
+    if len(content['search']) < 2:
+        return jsonify([])
+    getnaimelist = Managedb()
+    
+    df = pd.DataFrame(getnaimelist.readlclist(), 
+    columns = ['animelicenseid','anilistid','romaji',
+    'season','year','format', 'imgurl','licensor','musethyt',
+     'bilibili', 'aisplay','netflix','anioneyt',
+     'iqiyi','flixer','wetv','trueid', 'viu','pops', 'linetv',
+      'amazon', 'iflix'])
+    df = df[df['romaji'].str.lower().str.contains(content['search'].lower())]
+    df = df.sort_values(by=['year'], ascending=True, ignore_index=True)
+    df = df.fillna(0)
+
+    if len(df.index) - 1 < firstIndex:
+        return "Page ended"
+    if(len(df.index) - 1 < lastIndex):
+        lastIndex = len(df.index) - 1
+
+    df = df.loc[firstIndex:lastIndex]
+
+    json = df.to_dict('records')
+    print(type(json))
+
+    return jsonify(json)
+
 @app.route('/filterlclist', methods = ['POST'])
 def filterlclist():
     # if request.method == 'POST':
     getnaimelist = Managedb()
     content = request.get_json(silent=True)
-    print(content)
+    try:
+        print(content['perPage'])
+        print(content['page'])
+    except:
+        print("Value error")
+        return "Value error"
     # content = {'season': 'Winter'}
     firstIndex = content['page'] * content['perPage'] - content['perPage']
     lastIndex = firstIndex + content['perPage'] - 1
@@ -275,6 +361,7 @@ def filterlclist():
     json = df.to_dict('records')
 
     return jsonify(json)
+
 if __name__ == '__main__':
     app.debug = True
     app.run(host='0.0.0.0',port=8000)

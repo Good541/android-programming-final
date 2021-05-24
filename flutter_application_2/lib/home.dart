@@ -1,11 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:requests/requests.dart';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:transparent_image/transparent_image.dart';
 import 'animedetail.dart';
 import 'package:http/http.dart' as http;
+import 'requesturl.dart';
 
 class Home extends StatefulWidget {
   static const routeName = '/home';
@@ -21,6 +22,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   List myList;
   List queryid;
   bool _loading = false;
+  var requestURrl = RequestURL();
   @override
   void initState() {
     super.initState();
@@ -32,35 +34,20 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   getMyList() async {
     _loading = true;
     myList = new List();
-    var r = await Requests.get('http://shirakami.trueddns.com:60181/getanimelist');
-    //var r = await Requests.get('http://192.168.1.57:8000/getanimelist');
+    var r = await Requests.get(requestURrl.getApiURL+'/getanimelist');
     r.raiseForStatus();
     String rs1 = r.content();
-    // print(rs1);
     if (this.mounted) {
       this.setState(() {
         var resp = jsonDecode(rs1);
-        //print(resp.toString());
         for (var str in resp) {
-          //debugPrint(str['title']['romaji']);
           myList.add(
-              // str['listid'],
-              // str['uid'],
-              // str['anilistid'],
-              // str['malid'],
-              // str['status'],
-              // str['episode'],
-              // str['rating'],
-              // str['romaji'],
-              // str['imgurl'],
-              // str['totaleps']
               str
           );
           
         }
       });
     }
-    //print(myList[0][0]['anilistid']);
     _loading = false;
   }
 
@@ -75,7 +62,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   }
 
   queryId(animeid, listid, status, episode, rating, totaleps) async {
-    //print("querydata--------------");
     queryid = new List();
     final url = Uri.parse('https://graphql.anilist.co');
     Map<String, String> headers = {"Content-type": "application/json"};
@@ -97,18 +83,13 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                       }
               }''';
     var json = {'query': query, 'variables': variables};
-    //debugPrint(jsonEncode(json));
     var client = http.Client();
-    // make POST request
     var response =
         await client.post(url, headers: headers, body: jsonEncode(json));
-    // check the status code for the result
     if (this.mounted) {
       this.setState(() {
         var searchList = {};
         searchList = jsonDecode(response.body);
-        // print(jsonDecode(response.body));
-        //print(jsonEncode(searchList));
         if (searchList['data'] != null) {
           var data = searchList['data']['Media'];
           //debugPrint(str['title']['romaji']);
@@ -119,7 +100,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
             data['idMal'],
             data['coverImage']['extraLarge']
           ]);
-          // debugPrint(titleList[i][1]);
         }
       });
     }
@@ -128,12 +108,10 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   }
 
   queryData() async {
-    //print("querydata--------------");
     queryid = new List();
     final url = Uri.parse('https://graphql.anilist.co');
     Map<String, String> headers = {"Content-type": "application/json"};
     for (int i = 0; i < myList.length; i++) {
-     // print(myList[i][2].toString());
       Map variables = {'id': myList[i]['anilistid']};
       String query = '''query (\$id: Int) {
                         Media (id:\$id, type: ANIME) {
@@ -152,20 +130,14 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                         }
                 }''';
       var json = {'query': query, 'variables': variables};
-      //debugPrint(jsonEncode(json));
       var client = http.Client();
-      // make POST request
       var response = await client.post(url, headers: headers, body: jsonEncode(json));
-      // check the status code for the result
       if (this.mounted) {
         this.setState(() {
           var searchList = {};
           searchList = jsonDecode(response.body);
-          // print(jsonDecode(response.body));
-          //print(jsonEncode(searchList).runtimeType);
           if (searchList['data'] != null) {
             var data = searchList['data']['Media'];
-            //debugPrint(str['title']['romaji']);
             queryid.add([
               data['id'],
               data['title']['romaji'],
@@ -173,7 +145,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
               data['idMal'],
               data['coverImage']['extraLarge']
             ]);
-            // debugPrint(titleList[i][1]);
           }
         });
       }
@@ -198,8 +169,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
         _dropDownStatus != null ||
         rating != null) {
       if (episode != "" && animeid != null) {
-        // queryId(animeid);
-        //print("tps: " + queryid[0][2].toString());
         if (totaleps != null) {
           totaleps = queryid[0][2];
 
@@ -211,8 +180,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
         episode = int.parse(episode);
         rating = int.parse(rating);
         updatedb(animeid, listid, status, episode, rating, totaleps);
-
-        //after add anime
 
         textController.text = "";
         _dropDownStatus = null;
@@ -233,27 +200,8 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
       'rating': rating,
       'totaleps': totaleps
     };
-    // final url = Uri.parse('http://shirakami.trueddns.com:60181/updateanimelist');
-    // // final url = Uri.parse('http://localhost:8000/getanimelist');
-    // Map<String, String> headers = {"Content-type": "application/json"};
 
-    // debugPrint(jsonEncode(json));
-    // // make POST request
-    // var client = http.Client();
-    // var response =
-    //     await client.post(url, headers: headers, body: jsonEncode(json));
-    // // check the status code for the result
-    // String result = "";
-    // if (this.mounted) {
-    //   this.setState(() {
-    //     result = response.body;
-    //   });
-    // }
-
-    // client.close();
-
-    var r = await Requests.post('http://shirakami.trueddns.com:60181/updateanimelist', json: json);
-    //var r = await Requests.post('http://192.168.1.57:8000/updateanimelist', json: json);
+    var r = await Requests.post(requestURrl.getApiURL+'/updateanimelist', json: json);
     r.raiseForStatus();
     String rs1 = r.content();
     getMyList();
@@ -261,28 +209,8 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
 
   deletedb(listid) async {
     var json = {'listid': listid, 'uid': 0};
-    // final url = Uri.parse('http://shirakami.trueddns.com:60181/deleteanimelist');
-    // // final url = Uri.parse('http://localhost:8000/deleteanimelist');
-    // Map<String, String> headers = {"Content-type": "application/json"};
 
-    // debugPrint(jsonEncode(json));
-    // // make POST request
-    // var client = http.Client();
-    // var response =
-    //     await client.post(url, headers: headers, body: jsonEncode(json));
-    // // check the status code for the result
-    // String result = "";
-    // if (this.mounted) {
-    //   this.setState(() {
-    //     result = response.body;
-    //   });
-    // }
-
-    // debugPrint(result);
-
-    // client.close();
-    var r = await Requests.post('http://shirakami.trueddns.com:60181/deleteanimelist', json: json);
-    //var r = await Requests.post('http://192.168.1.57:8000/deleteanimelist', json: json);
+    var r = await Requests.post(requestURrl.getApiURL+'/deleteanimelist', json: json);
     r.raiseForStatus();
     String rs1 = r.content();
     getMyList();
@@ -302,18 +230,22 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     return RefreshIndicator(
       onRefresh: _pullRefresh,
       child: new ListView.builder(
+      physics: const AlwaysScrollableScrollPhysics(),
       itemCount: filterList == null ? 0 : filterList.length,
       itemBuilder: (BuildContext context, int index) {
         return Container(
           height: 150,
           child: Card(
             child: InkWell(
-              //color: Colors.orange,
               child: Row(
                 children: [
                   Expanded(
                     flex: 30,
-                    child: Image.network(filterList[index]['imgurl']),
+                    child: //Image.network(filterList[index]['imgurl'])
+                    FadeInImage.memoryNetwork(
+                      placeholder: kTransparentImage,
+                      image: filterList[index]['imgurl'],
+                    ),
                   ),
                   Expanded(
                     flex: 60,
@@ -337,7 +269,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                         Align(
                           alignment: Alignment.centerLeft,
                           child: new Text("Status: " + filterList[index]['status'],
-                              //style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16,),
                               textAlign: TextAlign.left),
                         ),
                         Align(
@@ -351,14 +282,12 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                   filterList[index]['episode'].toString() +
                                   "/" +
                                   filterList[index]['totaleps'].toString(),
-                              //style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16,),
                               textAlign: TextAlign.left),
                         ),
                         Align(
                           alignment: Alignment.centerLeft,
                           child: new Text(
                               "Score: " + filterList[index]['rating'].toString(),
-                              //style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16,),
                               textAlign: TextAlign.left),
                         ),
                       ],
@@ -368,9 +297,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                     flex: 10,
                     child: Column(
                       children: [
-                        // SizedBox(
-                        //   height: 10.0,
-                        // ),
                         Align(
                           alignment: Alignment.topRight,
                           child: PopupMenuButton(
@@ -437,18 +363,21 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     return RefreshIndicator(
       onRefresh: _pullRefresh,
       child: new ListView.builder(
+      physics: const AlwaysScrollableScrollPhysics(),
       itemCount: myList == null ? 0 : myList.length,
       itemBuilder: (BuildContext context, int index) {
         return Container(
           height: 150,
           child: Card(
             child: InkWell(
-              //color: Colors.orange,
               child: Row(
                 children: [
                   Expanded(
                     flex: 33,
-                    child: Image.network(myList[index]['imgurl']),
+                    child:                     FadeInImage.memoryNetwork(
+                      placeholder: kTransparentImage,
+                      image: myList[index]['imgurl'],
+                    ),
                   ),
                   Expanded(
                     flex: 66,
@@ -472,7 +401,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                         Align(
                           alignment: Alignment.centerLeft,
                           child: new Text("Status: " + myList[index]['status'],
-                              //style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16,),
                               textAlign: TextAlign.left),
                         ),
                         Align(
@@ -486,14 +414,12 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                   myList[index]['episode'].toString() +
                                   "/" +
                                   myList[index]['totaleps'].toString(),
-                              //style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16,),
                               textAlign: TextAlign.left),
                         ),
                         Align(
                           alignment: Alignment.centerLeft,
                           child: new Text(
                               "Score: " + myList[index]['rating'].toString(),
-                              //style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16,),
                               textAlign: TextAlign.left),
                         ),
                       ],
@@ -503,9 +429,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                     flex: 10,
                     child: Column(
                       children: [
-                        // SizedBox(
-                        //   height: 10.0,
-                        // ),
                         Align(
                           alignment: Alignment.topRight,
                           child: PopupMenuButton(
@@ -634,7 +557,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                           } else if (_dropDownStatus == 'Considering') {
                             textController.text = "0";
                           }
-                        } // Only numbers can be entered
+                        } 
                         ),
                     SizedBox(
                       height: 10.0,
