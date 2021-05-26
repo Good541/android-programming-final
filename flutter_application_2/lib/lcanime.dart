@@ -25,12 +25,11 @@ class _LicensedAnimeState extends State<LicensedAnime> {
   String searchQuery = "Search query";
   TabController controller;
   bool _loading = false;
-  var searchList = {};
   List animeList = new List();
   var mediaformat = ['TV', 'TV_SHORT', 'MOVIE', 'SPECIAL', 'OVA', 'ONA'];
   List mediaStatus = ['FINISHED', 'RELEASING', 'NOT_YET_RELEASED'];
   List mediaSeson = ['WINTER', 'SPRING', 'SUMMER', 'FALL'];
-  List streamingService = ['musethyt', 'anioneyt', 'bilibili', 'aislay', 'flixer', 'iqiyi', 'netflix', 'iqiyi', 'trueid', 'viu', 'pops', 'linetv', 'amazon', 'iflix'];
+  List streamingService = ['musethyt', 'anioneyt', 'bilibili', 'aisplay', 'flixer', 'iqiyi', 'netflix', 'iqiyi', 'trueid', 'viu', 'pops', 'linetv', 'amazon', 'iflix'];
   int fetchPage;
   String queryState = "initdata";
   List lcAnimeList;
@@ -141,7 +140,7 @@ class _LicensedAnimeState extends State<LicensedAnime> {
           lcAnimeList.add(str);
         }
         amountListView = lcAnimeList.length;
-        
+    
       });
     }
     _loading = false;
@@ -181,8 +180,9 @@ class _LicensedAnimeState extends State<LicensedAnime> {
     queryState = "filterData";
     lcAnimeList = new List();
     year == null? year = null : year = int.parse(year);
-    currentFilter = [licensor, streamingServiceIndex, season, year, format];
-    var json = {"licensor":licensor, "season":season, "year":year, "format":format, 'page': 1, 'perPage': 20};
+    currentFilter = [licensor, season, year, format, streamingServiceIndex];
+    String streaming = streamingServiceIndex == null? null : streamingService[streamingServiceIndex];
+    var json = {"licensor":licensor, "season":season, "year":year, "format":format, "streaming": streaming, 'page': 1, 'perPage': 20};
     var r = await Requests.post(requestURrl.getApiURL+'/filterlclist', json: json);
     r.raiseForStatus();
     String rs1 = r.content();
@@ -195,24 +195,26 @@ class _LicensedAnimeState extends State<LicensedAnime> {
     }
     if (this.mounted) {
       this.setState(() {
-        var resp = jsonDecode(rs1);
-        for (var str in resp) {
-          lcAnimeList.add(str);
-        }
-        amountListView = lcAnimeList.length;
+      var resp = jsonDecode(rs1);
+      for (var str in resp) {
+        lcAnimeList.add(str);
+      }
+      amountListView = lcAnimeList.length;
       });
     }
     print(lcAnimeList.length.toString());
     _loading = false;
   }
 
-  filterNextLcAnime(licensor, season, year, format) async{
+  filterNextLcAnime(licensor, season, year, format, streamingServiceIndex) async{
     _loading = true;
     queryState = "filterData";
-    var json = {"licensor":licensor, "season":season, "year":year, "format":format, 'page': fetchPage, 'perPage': 20};
+    String streaming = streamingServiceIndex == null? null : streamingService[streamingServiceIndex];
+    var json = {"licensor":licensor, "season":season, "year":year, "format":format, "streaming": streaming, 'page': fetchPage, 'perPage': 20};
     var r = await Requests.post(requestURrl.getApiURL+'/filterlclist', json: json);
     r.raiseForStatus();
     String rs1 = r.content();
+    print(rs1);
     if (rs1 == "Page ended"){
       this.setState(() {
           _loading = false;
@@ -227,7 +229,7 @@ class _LicensedAnimeState extends State<LicensedAnime> {
           lcAnimeList.add(str);
         }
         amountListView = lcAnimeList.length;
-        
+            
       });
     }
     _loading = false;
@@ -327,7 +329,7 @@ class _LicensedAnimeState extends State<LicensedAnime> {
 
             case "filterData":
               setState(() {
-                filterNextLcAnime(currentFilter[0], currentFilter[1], currentFilter[2], currentFilter[3]);
+                filterNextLcAnime(currentFilter[0], currentFilter[1], currentFilter[2], currentFilter[3], currentFilter[4]);
               });
               break;
 
@@ -335,7 +337,7 @@ class _LicensedAnimeState extends State<LicensedAnime> {
         }
   }
 
-  queryId(method, animeid, episode, status, rating, romaji, imgurl, context) async {
+  queryId(animeid) async {
     //print("querydata--------------");
     _loading = true;
     int malid;
@@ -361,35 +363,22 @@ class _LicensedAnimeState extends State<LicensedAnime> {
               }''';
     var json = {'query': query, 'variables': variables};
     var client = http.Client();
-    var response =
-        await client.post(url, headers: headers, body: jsonEncode(json));
+    var response = await client.post(url, headers: headers, body: jsonEncode(json));
     var searchList = {};
     if (this.mounted) {
       this.setState(() {
-        
         searchList = jsonDecode(response.body);
-        if (searchList['data'] != null) {
-            malid = searchList['data']['Media']['idMal'];
-            totaleps = searchList['data']['Media']['episodes'];
-            romaji = searchList['data']['Media']['title']['romaji'];
-            imgurl = searchList['data']['Media']['coverImage']['extraLarge'];
-        }
-      
+        _loading = false;
+        // if (searchList['data'] != null) {
+        //   
+        //   client.close();
+        //   return searchList['data']['Media'];
+        // }
       });
-      _loading = false;
+      
     }
     client.close();
-    if (method == "AddDB"){
-      addAnime(animeid, episode, status, rating, malid, romaji, imgurl, totaleps);
-      print("AddDB");
-    }
-    else if (method == "queryAnime"){
-      checkMyList(context, searchList['data']['Media']);
-      print("queryAnime");
-    }
-    else if (method == "editDB"){
-
-    }
+    return searchList['data']['Media'];
   }
   
 
@@ -497,25 +486,29 @@ class _LicensedAnimeState extends State<LicensedAnime> {
     r.raiseForStatus();
     String rs1 = r.content();
     int listid;
-    if (this.mounted) {
-      this.setState(() {
-        var resp = jsonDecode(rs1);
-        for (var str in resp) {
-          if(animeData['id'] == str['anilistid']){
-            listid = str['listid'];
-            textController.text = str['episode'].toString(); //after add anime
-            _dropDownStatus = str['status'];
-            _dropDownRating = str['rating'].toString();
-            _loading = false;
-            return _showEditDialog(context, animeData, listid);
-          }
-        }
-      });
+    // if (this.mounted) {
+    //   this.setState(() {
+    var resp = jsonDecode(rs1);
+    for (var str in resp) {
+      if(animeData['id'] == str['anilistid']){
+        listid = str['listid'];
+        textController.text = str['episode'].toString(); //after add anime
+        _dropDownStatus = str['status'];
+        _dropDownRating = str['rating'].toString();
+        setState(() {
+          _loading = false;
+        });
+        return _showEditDialog(context, animeData, listid);
+      }
     }
+    //   });
+    // }
     textController.text = ""; //after add anime
     _dropDownStatus = null;
     _dropDownRating = null;
-    _loading = false;
+    setState(() {
+      _loading = false;
+    });
     _showDialog(context, animeData);
   }
 
@@ -639,7 +632,10 @@ class _LicensedAnimeState extends State<LicensedAnime> {
               child: Text("Cancel"),
             ),
             new ElevatedButton(
-              onPressed: () => queryId("AddDB", animeData['id'], textController.text, _dropDownStatus, _dropDownRating, animeData['romaji'], animeData['imgurl'], null),
+              onPressed: () async{
+                var anilist = await queryId(animeData['id']);
+                addAnime(anilist['id'], textController.text, _dropDownStatus, _dropDownRating, anilist['malid'], anilist['title']['romaji'], anilist['coverImage']['extraLarge'], anilist['episode']);
+              },
               child: Text("Add"),
             ),
           ],
@@ -911,6 +907,7 @@ class _LicensedAnimeState extends State<LicensedAnime> {
                         setState(() {
                             _dropDownSeasonRelease = val;
                             _dropDownSeasonReleaseIndex = seasonView.indexOf(val);
+                            if(_dropDownYearRelease == null) _dropDownYearRelease = DateTime.now().year.toString();
                           },
                         );
                       },
@@ -960,6 +957,7 @@ class _LicensedAnimeState extends State<LicensedAnime> {
                 _dropDownAiringStatusIndex = null;
                 _dropDownSeasonReleaseIndex = null;
                 _dropDownstreamingService = null;
+                currentFilter = [null, null, null, null, null];
                 getLcAnime();
                 Navigator.of(context, rootNavigator: true).pop();
                 _filterDialog(context);
@@ -969,8 +967,12 @@ class _LicensedAnimeState extends State<LicensedAnime> {
             new ElevatedButton(
               onPressed: () {
                 this.setState(() {
-                    filterLcAnime(_dropDownLicensor, _dropdownStreamingService, _dropDownSeasonRelease, _dropDownYearRelease, _dropDownType);
-                    Navigator.of(context, rootNavigator: true).pop();
+                  //currentFilter = [null, null, null, null, null];
+                  if(_dropDownLicensor == null && _dropDownstreamingServiceIndex == null && _dropDownSeasonRelease == null && _dropDownYearRelease == null && _dropDownType == null)
+                    getLcAnime();
+                  else
+                    filterLcAnime(_dropDownLicensor, _dropDownstreamingServiceIndex, _dropDownSeasonRelease, _dropDownYearRelease, _dropDownType);
+                  Navigator.of(context, rootNavigator: true).pop();
                   }
                 );
               },
@@ -1008,7 +1010,8 @@ class _LicensedAnimeState extends State<LicensedAnime> {
   List rating = ['10', '9', '8', '7', '6', '5', '4', '3', '2', '1'];
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return MaterialApp(
+      home: Scaffold(
         appBar: AppBar(
           leading: _isSearching ? const BackButton() : null,
           title: _isSearching ? _buildSearchField() : Text('Licensed anime in Thailand'),
@@ -1031,7 +1034,7 @@ class _LicensedAnimeState extends State<LicensedAnime> {
                         child: Row(
                           children: [
                             Expanded(
-                              flex: 33,
+                              flex: 29,
                               child: //Image.network(lcAnimeList[index]['imgurl']),
                               FadeInImage.memoryNetwork(
                                 placeholder: kTransparentImage,
@@ -1039,7 +1042,12 @@ class _LicensedAnimeState extends State<LicensedAnime> {
                               ),
                             ),
                             Expanded(
-                              flex: 66,
+                              flex: 2,
+                              child: Column() //Image.network(today[index][7]),
+                                
+                            ),
+                            Expanded(
+                              flex: 59,
                               child: Column(
                                 children: [
                                   SizedBox(
@@ -1062,13 +1070,23 @@ class _LicensedAnimeState extends State<LicensedAnime> {
                                   ),
                                   Align(
                                     alignment: Alignment.topLeft,
+                                    child: new Text("Type: "+lcAnimeList[index]['format'],
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.normal,
+                                          //fontSize: 16,
+                                          color: Colors.black,
+                                        ),
+                                        textAlign: TextAlign.left),
+                                  ),
+                                  Align(
+                                    alignment: Alignment.topLeft,
                                     child: new Text(lcAnimeList[index]['licensor'] == 0?
                                     "Licensor: -"
                                     :
                                     "Licensor: "+lcAnimeList[index]['licensor'],
                                         style: TextStyle(
                                           fontWeight: FontWeight.normal,
-                                          fontSize: 16,
+                                          //fontSize: 16,
                                           color: Colors.black,
                                         ),
                                         textAlign: TextAlign.left),
@@ -1095,7 +1113,7 @@ class _LicensedAnimeState extends State<LicensedAnime> {
                                           child: Text("Add",style: TextStyle(color: Colors.black),),
                                         ),
                                       ],
-                                      onSelected: (item) {
+                                      onSelected: (item) async {
                                         switch (item) {
                                           case 0:
                                             Navigator.push(
@@ -1105,8 +1123,8 @@ class _LicensedAnimeState extends State<LicensedAnime> {
                                             break;
 
                                           case 1:
-                                            print("grg;rtkg,;rt"+lcAnimeList[index]['anilistid'].toString());
-                                            queryId("queryAnime", lcAnimeList[index]['anilistid'], null, null, null, lcAnimeList[index]['romaji'], lcAnimeList[index]['imgurl'], context);
+                                            var anilist = await queryId(lcAnimeList[index]['anilistid']);
+                                            checkMyList(context, anilist);
                                             break;
                                         }
                                       },
@@ -1137,7 +1155,8 @@ class _LicensedAnimeState extends State<LicensedAnime> {
                   ))
                 : Container(), //if isLoading flag is true it'll display the progress indicator
           ],
-        )
+        ),
+      ),
       );
   }
 }

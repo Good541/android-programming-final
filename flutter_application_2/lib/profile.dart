@@ -78,7 +78,7 @@ class _ProfileState extends State<Profile> {
                     );
       }
       return Text(
-                    'Loading...',
+                    '',
                     style: TextStyle(
                       fontSize: 22.0,
                       color: Colors.black,
@@ -103,7 +103,10 @@ class _ProfileState extends State<Profile> {
         print(e);
         _loginStatus = false;
       }
-      _loading = false;
+      setState(() {
+        _loading = false;
+      });
+      
     }
 
     final oldPwdtextController = TextEditingController();
@@ -233,18 +236,8 @@ class _ProfileState extends State<Profile> {
       }
     }
 
-    var avatarImg;
-    bool _loading = false;
-    @override
-    Widget build(BuildContext context) {
-        return Scaffold(
-          appBar: AppBar(
-              title: Text('Profile'),
-          ),
-          body: SingleChildScrollView(
-          child: Center(
-            child: Column(
-              children: <Widget>[
+    avatarMenu(){
+      return <Widget>[
                 SizedBox(
                 height: 25.0,
                 ),
@@ -279,9 +272,35 @@ class _ProfileState extends State<Profile> {
                   },
                 ),
 
-              ],
-                
-            )
+              ];
+    }
+
+    var avatarImg;
+    bool _loading;
+    @override
+    Widget build(BuildContext context) {
+        return MaterialApp(
+        home: Scaffold(
+          appBar: AppBar(
+              title: Text('My account'),
+          ),
+          body: Stack(
+            children: [
+              SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.max,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: avatarImg == null? [] : avatarMenu(),
+                ),
+              ),
+              _loading
+              ? Container(
+                  child: Center(
+                    child: CircularProgressIndicator(valueColor: new AlwaysStoppedAnimation<Color>(Colors.blue)),
+                ))
+              : Container(),
+            ],
           ),
         ),
       );

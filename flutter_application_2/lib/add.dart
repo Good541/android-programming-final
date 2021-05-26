@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
+import 'package:readmore/readmore.dart';
 import 'package:requests/requests.dart';
 import 'package:transparent_image/transparent_image.dart';
 import 'animedetail.dart';
@@ -26,13 +27,13 @@ class _AddState extends State<Add> {
   bool _loading = false;
   var searchList = {};
   List animeList = new List();
-  var mediaformat = ['TV', 'TV_SHORT', 'MOVIE', 'SPECIAL', 'OVA', 'ONA'];
+  List mediaformat = ['TV', 'TV_SHORT', 'MOVIE', 'SPECIAL', 'OVA', 'ONA'];
   List mediaStatus = ['FINISHED', 'RELEASING', 'NOT_YET_RELEASED'];
   List mediaSeson = ['WINTER', 'SPRING', 'SUMMER', 'FALL'];
   int fetchPage;
   String queryState = "initdata";
   List currentFilter;
-  var requestURrl = RequestURL();
+  RequestURL requestURrl = RequestURL();
   Widget _buildSearchField() {
     return TextField(
       controller: _searchQueryController,
@@ -175,7 +176,8 @@ class _AddState extends State<Add> {
                 str['title']['romaji'],
                 str['episodes'],
                 str['idMal'],
-                str['coverImage']['extraLarge']
+                str['coverImage']['extraLarge'],
+                str['format']
               ]);
             
           }
@@ -248,7 +250,8 @@ class _AddState extends State<Add> {
                 str['title']['romaji'],
                 str['episodes'],
                 str['idMal'],
-                str['coverImage']['extraLarge']
+                str['coverImage']['extraLarge'],
+                str['format']
               ]);
             
           }
@@ -256,16 +259,16 @@ class _AddState extends State<Add> {
         });
       }
       client.close();
-    setState(() {
       amountListView = animeList.length;
-    });
     _loading = false;
   }
 
   queryData() async {
     queryState = "queryData";
     fetchPage = 1;
-    _loading = true;
+    setState(() {
+      _loading = true;
+    });
     animeList = new List();
     final url = Uri.parse('https://graphql.anilist.co');
     Map<String, String> headers = {"Content-type": "application/json"};
@@ -320,25 +323,25 @@ class _AddState extends State<Add> {
                   str['title']['romaji'],
                   str['episodes'],
                   str['idMal'],
-                  str['coverImage']['extraLarge']
+                  str['coverImage']['extraLarge'],
+                  str['format']
                 ]);
               }
             }
-          } else {
-        }
+          }
+          _loading = false;
       });
     }
     client.close();
 
-    setState(() {
-      amountListView = animeList.length;
-    });
-    _loading = false;
+    amountListView = animeList.length;
+    
   }
 
   nextQueryData(page) async {
-    _loading = true;
-    //print("querydata--------------");
+    setState(() {
+      _loading = true;
+    });
     final url = Uri.parse('https://graphql.anilist.co');
     Map<String, String> headers = {"Content-type": "application/json"};
       Map variables = {
@@ -392,7 +395,8 @@ class _AddState extends State<Add> {
                   str['title']['romaji'],
                   str['episodes'],
                   str['idMal'],
-                  str['coverImage']['extraLarge']
+                  str['coverImage']['extraLarge'],
+                  str['format']
                 ]);
               }
             }
@@ -400,20 +404,21 @@ class _AddState extends State<Add> {
           } else {
             page = 1;
           }
+          _loading = false;
         });
       }
-      client.close();
-    setState(() {
-      amountListView = animeList.length;
-    });
-    _loading = false;
+    client.close();
+    amountListView = animeList.length;
+    
   }
 
   filterQueryData(statusIndex, typeIndex, seasonReleaseIndex, yearRelease) async {
     fetchPage = 1;
     queryState = "filterData";
     currentFilter = [statusIndex, typeIndex, seasonReleaseIndex, yearRelease];
-    _loading = true;
+    setState(() {
+      _loading = true;
+    });
     animeList = new List();
     final url = Uri.parse('https://graphql.anilist.co');
     Map<String, String> headers = {"Content-type": "application/json"};
@@ -494,17 +499,19 @@ class _AddState extends State<Add> {
                   str['title']['romaji'],
                   str['episodes'],
                   str['idMal'],
-                  str['coverImage']['extraLarge']
+                  str['coverImage']['extraLarge'],
+                  str['format']
                 ]);
               }
             }
-          } else {
           }
+           _loading = false;
         });
       }
       client.close();
     amountListView = animeList.length;
-    _loading = false;
+    
+   
 
   }
 
@@ -591,7 +598,8 @@ class _AddState extends State<Add> {
                   str['title']['romaji'],
                   str['episodes'],
                   str['idMal'],
-                  str['coverImage']['extraLarge']
+                  str['coverImage']['extraLarge'],
+                  str['format']
                 ]);
               }
             }
@@ -666,16 +674,23 @@ class _AddState extends State<Add> {
         scrollController.position.maxScrollExtent) {
       fetchPage++;        
       switch(queryState){
-        case "initData":
-          nextInitData(fetchPage);
+          case "initData":
+          setState(() {
+            nextInitData(fetchPage);
+          });
           break;
 
         case "queryData":
+          setState(() {
+            nextQueryData(fetchPage);
+          });
           nextQueryData(fetchPage);
           break;
 
         case "filterData":
-          nextFilterQueryData(currentFilter[0], currentFilter[1], currentFilter[2], currentFilter[3], fetchPage);
+          setState(() {
+            nextFilterQueryData(currentFilter[0], currentFilter[1], currentFilter[2], currentFilter[3], fetchPage);
+          });        
           break;
 
       }
@@ -720,8 +735,7 @@ class _AddState extends State<Add> {
     }
   }
 
-  addTodb(animeid, episode, status, rating, malid, romaji, imgurl,
-      totaleps) async {
+  addTodb(animeid, episode, status, rating, malid, romaji, imgurl, totaleps) async {
     var json = {
       'uid': 0,
       'anilistid': animeid,
@@ -784,31 +798,37 @@ class _AddState extends State<Add> {
   }
 
   checkMyList(context, animeData) async {
-    _loading = true;
+    setState(() {
+      _loading = true;
+    });
     var r = await Requests.get(requestURrl.getApiURL+'/getanimelist');
     r.raiseForStatus();
     String rs1 = r.content();
     int listid;
-    if (this.mounted) {
-      this.setState(() {
-        var resp = jsonDecode(rs1);
-        for (var str in resp) {
-          if(animeData[0] == str['anilistid']){
-            listid = str['listid'];
-            textController.text = str['episode'].toString();
-            _dropDownStatus = str['status'];
-            _dropDownRating = str['rating'].toString();
-            _loading = false;
-            return _showEditDialog(context, animeData, listid);
-          }
-        }
-      });
+    // if (this.mounted) {
+    //   this.setState(() {
+    var resp = jsonDecode(rs1);
+    for (var str in resp) {
+      if(animeData[0] == str['anilistid']){
+        listid = str['listid'];
+        textController.text = str['episode'].toString();
+        _dropDownStatus = str['status'];
+        _dropDownRating = str['rating'].toString();
+        setState(() {
+          _loading = false;
+        });
+        return _showEditDialog(context, animeData, listid);
+      }
     }
+    //   });
+    // }
     textController.text = "";
     _dropDownStatus = null;
     _dropDownRating = null;
-    _loading = false;
-    _showDialog(context, animeData);
+    setState(() {
+      _loading = false;
+      _showDialog(context, animeData);
+    });
   }
 
   void runLoading() {
@@ -1091,13 +1111,13 @@ class _AddState extends State<Add> {
   List seasonView = ['Winter', 'Spring', 'Summer', 'Fall'];
 
   Future _filterDialog(context) async {
-     _dropDownAiringStatus = null;
-     _dropDownType = null;
-     _dropDownSeasonRelease = null;
-     _dropDownYearRelease = null;
-     _dropDownTypeIndex = null;
-     _dropDownAiringStatusIndex = null;
-     _dropDownSeasonReleaseIndex = null;
+    //  _dropDownAiringStatus = null;
+    //  _dropDownType = null;
+    //  _dropDownSeasonRelease = null;
+    //  _dropDownYearRelease = null;
+    //  _dropDownTypeIndex = null;
+    //  _dropDownAiringStatusIndex = null;
+    //  _dropDownSeasonReleaseIndex = null;
     return showDialog<void>(
       context: context,
       builder: (BuildContext context) {
@@ -1181,6 +1201,7 @@ class _AddState extends State<Add> {
                         setState(() {
                             _dropDownSeasonRelease = val;
                             _dropDownSeasonReleaseIndex = seasonView.indexOf(val);
+                            if(_dropDownYearRelease == null) _dropDownYearRelease = DateTime.now().year.toString();
                           },
                         );
                       },
@@ -1223,6 +1244,12 @@ class _AddState extends State<Add> {
             new ElevatedButton(
               onPressed: () {
                 initData();
+                _dropDownAiringStatus = null;
+                _dropDownType = null;
+                _dropDownTypeIndex = null;
+                _dropDownSeasonRelease = null;
+                _dropDownSeasonReleaseIndex = null;
+                _dropDownYearRelease = null;
                 Navigator.of(context, rootNavigator: true).pop();
                 _filterDialog(context);
               },
@@ -1267,7 +1294,8 @@ class _AddState extends State<Add> {
   List rating = ['10', '9', '8', '7', '6', '5', '4', '3', '2', '1'];
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return MaterialApp(
+      home: Scaffold(
         appBar: AppBar(
           leading: _isSearching ? const BackButton() : null,
           title: _isSearching ? _buildSearchField() : Text('Add anime'),
@@ -1291,7 +1319,7 @@ class _AddState extends State<Add> {
                         child: Row(
                           children: [
                             Expanded(
-                              flex: 33,
+                              flex: 29,
                               child: //Image.network(animeList[index][4]),
                               FadeInImage.memoryNetwork(
                                 placeholder: kTransparentImage,
@@ -1299,27 +1327,54 @@ class _AddState extends State<Add> {
                               ),
                             ),
                             Expanded(
-                              flex: 66,
+                              flex: 2,
+                              child: Column() //Image.network(today[index][7]),
+                                
+                            ),
+                            Expanded(
+                              flex: 59,
                               child: Column(
                                 children: [
                                   SizedBox(
                                     height: 10.0,
+                                  ),                                   
+                                  Align(
+                                    alignment: Alignment.topLeft,
+                                    child: ReadMoreText(
+                                                    animeList[index][1],
+                                                    trimLines: 3,
+                                                    trimMode: TrimMode.Line,
+                                                    trimCollapsedText: ' ',
+                                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black),
+                                                    
+                                                  ),
                                   ),
-                                  Expanded(
-                                    flex: 5,
-                                    child: 
-                                      Align(
-                                        alignment: Alignment.topLeft,
-                                        child: new Text(animeList[index][1],
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 16,
-                                              color: Colors.black,
-                                            ),
-                                            textAlign: TextAlign.left,
-                                            overflow: TextOverflow.fade,),
-                                      ),
+                                  SizedBox(
+                                    height: 10.0,
                                   ),
+                                  Align(
+                                    alignment: Alignment.topLeft,
+                                    child: new Text("Type: "+animeList[index][5],
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.normal,
+                                          //fontSize: 16,
+                                          color: Colors.black,
+                                        ),
+                                        textAlign: TextAlign.left,
+                                        overflow: TextOverflow.fade,),
+                                  ),
+                                  Align(
+                                    alignment: Alignment.topLeft,
+                                    child: new Text("Episodes: "+(animeList[index][2] == null ? "-" : animeList[index][2].toString()),
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.normal,
+                                          //fontSize: 16,
+                                          color: Colors.black,
+                                        ),
+                                        textAlign: TextAlign.left,
+                                        overflow: TextOverflow.fade,),
+                                  ),
+                                  
                                 ],
                               ),
                             ),
@@ -1352,15 +1407,8 @@ class _AddState extends State<Add> {
                                             break;
 
                                           case 1:
-                                            // textController.text = animeList[index][5].toString(); //after add anime
-                                            // _dropDownStatus = animeList[index][4];
-                                            // _dropDownRating = animeList[index][6].toString();
                                             checkMyList(context, animeList[index]);
                                             break;
-
-                                          // case 2:
-                                          //   //deletedb(myList[index][0]);
-                                          //   break;
                                         }
                                       },
                                     ),
@@ -1372,12 +1420,6 @@ class _AddState extends State<Add> {
                           ],
                         ),
                         onTap: () {
-                          // print(animeList[index][0].toString());
-                          // Navigator.push(
-                          //   context,
-                          //   MaterialPageRoute(builder: (context) => AnimeDetail(animeList[index][0])),
-                          // );
-                          //_showDialog(context, index);
                           checkMyList(context, animeList[index]);
                         },
                       ),
@@ -1393,7 +1435,7 @@ class _AddState extends State<Add> {
                   ))
                 : Container(), //if isLoading flag is true it'll display the progress indicator
           ],
-        )
+        ),),
       );
   }
 }

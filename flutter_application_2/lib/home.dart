@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:readmore/readmore.dart';
 import 'package:requests/requests.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -41,10 +42,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
       this.setState(() {
         var resp = jsonDecode(rs1);
         for (var str in resp) {
-          myList.add(
-              str
-          );
-          
+          myList.add(str);  
         }
       });
     }
@@ -240,7 +238,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
               child: Row(
                 children: [
                   Expanded(
-                    flex: 30,
+                    flex: 29,
                     child: //Image.network(filterList[index]['imgurl'])
                     FadeInImage.memoryNetwork(
                       placeholder: kTransparentImage,
@@ -248,7 +246,12 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                     ),
                   ),
                   Expanded(
-                    flex: 60,
+                    flex: 2,
+                    child: Column() //Image.network(today[index][7]),
+                      
+                  ),
+                  Expanded(
+                    flex: 59,
                     child: Column(
                       children: [
                         SizedBox(
@@ -256,12 +259,13 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                         ),
                         Align(
                           alignment: Alignment.centerLeft,
-                          child: new Text(filterList[index]['romaji'],
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                              textAlign: TextAlign.left),
+                          child: ReadMoreText(filterList[index]['romaji'],
+                                              trimLines: 3,
+                                              trimMode: TrimMode.Line,
+                                              trimCollapsedText: ' ',
+                                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black),
+                                              
+                                            ),
                         ),
                         SizedBox(
                           height: 10.0,
@@ -373,14 +377,19 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
               child: Row(
                 children: [
                   Expanded(
-                    flex: 33,
+                    flex: 29,
                     child:                     FadeInImage.memoryNetwork(
                       placeholder: kTransparentImage,
                       image: myList[index]['imgurl'],
                     ),
                   ),
                   Expanded(
-                    flex: 66,
+                    flex: 2,
+                    child: Column() //Image.network(today[index][7]),
+                      
+                  ),
+                  Expanded(
+                    flex: 59,
                     child: Column(
                       children: [
                         SizedBox(
@@ -388,12 +397,14 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                         ),
                         Align(
                           alignment: Alignment.centerLeft,
-                          child: new Text(myList[index]['romaji'],
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                              textAlign: TextAlign.left),
+                          child: ReadMoreText(myList[index]['romaji'],
+                                              trimLines: 3,
+                                              trimMode: TrimMode.Line,
+                                              trimCollapsedText: ' ',
+                                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black),
+                                              
+                                            ),
+                                              
                         ),
                         SizedBox(
                           height: 10.0,

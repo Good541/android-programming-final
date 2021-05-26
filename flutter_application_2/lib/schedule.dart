@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
+import 'package:readmore/readmore.dart';
 import 'package:requests/requests.dart';
 import 'package:flutter/material.dart';
 import 'package:transparent_image/transparent_image.dart';
@@ -203,6 +204,7 @@ class _ScheduleState extends State<Schedule> {
                 {
                   tomorrow.add([str['id'], date, str['episode'], str['media']['id'], str['media']['idMal'], str['media']['episodes'], str['media']['title']['romaji'], str['media']['coverImage']['extraLarge']]);
                   print(str['media']['countryOfOrigin']);
+                  print(str['media']['isAdult'].toString());
                 }
               }
               page = searchList['data']['Page']['pageInfo']['lastPage'];
@@ -324,29 +326,33 @@ class _ScheduleState extends State<Schedule> {
   }
 
   checkMyList(context, animeData) async {
-    _loading = true;
+    setState(() {
+      _loading = true;
+    });
     var r = await Requests.get(requestURrl.getApiURL+'/getanimelist');
     r.raiseForStatus();
     String rs1 = r.content();
     int listid;
-    if (this.mounted) {
-      this.setState(() {
-        var resp = jsonDecode(rs1);
-        for (var str in resp) {
-          if(animeData[3] == str['anilistid']){
-            listid = str['listid'];
-            textController.text = str['episode'].toString(); //after add anime
-            _dropDownStatus = str['status'];
-            _dropDownRating = str['rating'].toString();
-            return _showEditDialog(context, animeData, listid);
-          }
-        }
-      });
+    // if (this.mounted) {
+    //   this.setState(() {
+    var resp = jsonDecode(rs1);
+    for (var str in resp) {
+      if(animeData[3] == str['anilistid']){
+        listid = str['listid'];
+        textController.text = str['episode'].toString(); //after add anime
+        _dropDownStatus = str['status'];
+        _dropDownRating = str['rating'].toString();
+        return _showEditDialog(context, animeData, listid);
+      }
     }
+    //   });
+    // }
     textController.text = ""; //after add anime
     _dropDownStatus = null;
     _dropDownRating = null;
-    _loading = false;
+    setState(() {
+      _loading = false;
+    });
     _showDialog(context, animeData);
   }
 
@@ -663,7 +669,7 @@ class _ScheduleState extends State<Schedule> {
                               child: Row(
                                 children: [
                                   Expanded(
-                                    flex: 33,
+                                    flex: 28,
                                     child: //Image.network(today[index][7]),
                                       FadeInImage.memoryNetwork(
                                         placeholder: kTransparentImage,
@@ -671,7 +677,12 @@ class _ScheduleState extends State<Schedule> {
                                       ),
                                   ),
                                   Expanded(
-                                    flex: 66,
+                                    flex: 2,
+                                    child: Column() //Image.network(today[index][7]),
+                                      
+                                  ),
+                                  Expanded(
+                                    flex: 58,
                                     child: Column(
                                       children: [
                                         SizedBox(
@@ -679,19 +690,18 @@ class _ScheduleState extends State<Schedule> {
                                         ),
                                         Align(
                                             alignment: Alignment.centerLeft,
-                                            child: new Text(today[index][6], 
-                                                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16,), 
-                                                            textAlign: TextAlign.left),
+                                            child: ReadMoreText(
+                                                    today[index][6],
+                                                    trimLines: 3,
+                                                    trimMode: TrimMode.Line,
+                                                    trimCollapsedText: ' ',
+                                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black),
+                                                    
+                                                  ),
                                         ),
-                                    //),
                                         SizedBox(
                                           height: 15.0,
                                         ),
-                                        // Align(
-                                        //   alignment: Alignment.centerLeft,
-                                        //   child: new Text(countdownAiring(today[index][1]), 
-                                        //   textAlign: TextAlign.left),
-                                        // ),
                                         Align(
                                             alignment: Alignment.centerLeft,
                                             child: new Text("At: "+today[index][1].hour.toString()+":"+(today[index][1].minute.toString() == "0"? "00" : today[index][1].minute.toString()), 
@@ -777,7 +787,7 @@ class _ScheduleState extends State<Schedule> {
                                 child: Row(
                                   children: [
                                     Expanded(
-                                      flex: 33,
+                                      flex: 29,
                                       child: //Image.network(tomorrow[index][7]),
                                       FadeInImage.memoryNetwork(
                                         placeholder: kTransparentImage,
@@ -785,7 +795,12 @@ class _ScheduleState extends State<Schedule> {
                                       ),
                                     ),
                                     Expanded(
-                                      flex: 66,
+                                      flex: 2,
+                                      child: Column() //Image.network(today[index][7]),
+                                        
+                                    ),
+                                    Expanded(
+                                      flex: 59,
                                       child: Column(
                                         children: [                            
                                               SizedBox(
@@ -793,22 +808,29 @@ class _ScheduleState extends State<Schedule> {
                                               ), 
                                               Align(
                                                   alignment: Alignment.centerLeft,
-                                                  child: new Text(tomorrow[index][6], 
-                                                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16,), 
-                                                                  textAlign: TextAlign.left),
+                                                  child: ReadMoreText(
+                                                    tomorrow[index][6],
+                                                    trimLines: 3,
+                                                    trimMode: TrimMode.Line,
+                                                    trimCollapsedText: ' ',
+                                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black),
+                                                    
+                                                  ),
                                               ),
                                               SizedBox(
                                                 height: 10.0,
                                               ),
                                               Align(
                                                   alignment: Alignment.centerLeft,
-                                                  child: new Text("At: "+tomorrow[index][1].toString(), 
+                                                  child: new Text("At: "+tomorrow[index][1].hour.toString()+":"+(tomorrow[index][1].minute.toString() == "0"? "00" : tomorrow[index][1].minute.toString()), 
                                                                   textAlign: TextAlign.left),
+                                              ),
+                                              SizedBox(
+                                                height: 2.0,
                                               ),
                                               Align(
                                                   alignment: Alignment.centerLeft,
-                                                  child: new Text("Ep: "+tomorrow[index][2].toString(), 
-                                                                  //style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16,), 
+                                                  child: new Text("Ep: "+tomorrow[index][2].toString()+"/"+(tomorrow[index][5] == null? "-" : tomorrow[index][5].toString()), 
                                                                   textAlign: TextAlign.left),
                                               ),
                                           //),

@@ -266,7 +266,7 @@ def getlcbyid():
      'iqiyi','flixer','wetv','trueid', 'viu','pops', 'linetv',
       'amazon', 'iflix'])
 
-    # df = df.sort_values(by=['year'], ascending=True, ignore_index=True)
+    df = df.sort_values(by=['year'], ascending=True, ignore_index=True)
     df = df.fillna(0)
 
     # if len(df.index) - 1 < firstIndex:
@@ -339,24 +339,34 @@ def filterlclist():
     lastIndex = firstIndex + content['perPage'] - 1
     content['perPage'] = None
     content['page'] = None
-    content = {k: v for k, v in content.items() if v is not None}
     df = pd.DataFrame(getnaimelist.readlclist(), 
     columns = ['animelicenseid','anilistid','romaji',
     'season','year','format', 'imgurl','licensor','musethyt',
      'bilibili', 'aisplay','netflix','anioneyt',
      'iqiyi','flixer','wetv','trueid', 'viu','pops', 'linetv',
       'amazon', 'iflix'])
+    # print(df)
+    if content['streaming'] != None:
+        print("streaminggggggggggg")
+        print(content['streaming'])
+        df = df.loc[df[content['streaming']] == 1]
+        del content['streaming']
+    content = {k: v for k, v in content.items() if v is not None}
     df = df.loc[(df[list(content)] == pd.Series(content)).all(axis=1)]
-    df = df.reset_index(drop=True)
-    df = df.loc[firstIndex:lastIndex]
-    df = df.sort_values(by=['year'], ascending=True, ignore_index=True)
-    df = df.fillna(0).reset_index()
+    # print(df)
+    df = df.reset_index(drop=False)
     print(df)
+    print(firstIndex)
+    print(lastIndex)
 
     if len(df.index) - 1 < firstIndex:
         return "Page ended"
     if(len(df.index) - 1 < lastIndex):
         lastIndex = len(df.index) - 1
+
+    df = df.loc[firstIndex:lastIndex]
+    df = df.sort_values(by=['year'], ascending=True, ignore_index=True)
+    df = df.fillna(0).reset_index()
 
     json = df.to_dict('records')
 

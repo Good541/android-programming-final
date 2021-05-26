@@ -119,13 +119,13 @@ class _AnimeDetailState extends State<AnimeDetail> {
       return;
     }
 
-    if (this.mounted) {
-      this.setState(() {
-        for (var str in resp) {
-          lcAnimeList.add(str);
-        }        
-      });
-    }
+    // if (this.mounted) {
+    //   this.setState(() {
+    for (var str in resp) {
+      lcAnimeList.add(str);
+    }        
+    //   });
+    // }
     addLicensor();
     
   }
@@ -266,277 +266,278 @@ class _AnimeDetailState extends State<AnimeDetail> {
   
   @override
   Widget build(BuildContext context) {
-    return 
-      Scaffold(
+    return MaterialApp(
+      home: Scaffold(
         appBar: AppBar(
           leading: BackButton(),
           title: animeInfo.isEmpty ? Text('Loading...') : Text(animeInfo[0][1]),
         ),
-        body: SingleChildScrollView(
-          child: Stack(
-            children: <Widget>[
-              Column(
-                children: [
-                  SizedBox(
-                    height: 10.0,
-                  ),
-                  Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Expanded(
-                        flex: 5,
-                        child: Text(''),
-                      ),
-                      Expanded(
-                        flex: 28,
-                        child: animeInfo.isEmpty ? Text('') : animeInfo == null ? Text('') : //Image.network(animeInfo[0][4]),
-                                                                                            FadeInImage.memoryNetwork(
-                                                                                              placeholder: kTransparentImage,
-                                                                                              image: animeInfo[0][4],
-                                                                                            ),
-                      ),
-                      Expanded(
-                        flex: 4,
-                        child: Text(''),
-                      ),
-                      Expanded(
-                        flex: 58,
-                        child:  Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            animeInfo.isEmpty ? Text('') : 
-                            Text(animeInfo[0][1], 
+        body: Stack(
+          children: <Widget>[
+            SingleChildScrollView(
+              child:
+                Column(
+                  children: [
+                    SizedBox(
+                      height: 10.0,
+                    ),
+                    Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Expanded(
+                          flex: 5,
+                          child: Text(''),
+                        ),
+                        Expanded(
+                          flex: 28,
+                          child: animeInfo.isEmpty ? Text('') : animeInfo == null ? Text('') : //Image.network(animeInfo[0][4]),
+                                                                                              FadeInImage.memoryNetwork(
+                                                                                                placeholder: kTransparentImage,
+                                                                                                image: animeInfo[0][4],
+                                                                                              ),
+                        ),
+                        Expanded(
+                          flex: 4,
+                          child: Text(''),
+                        ),
+                        Expanded(
+                          flex: 58,
+                          child:  Column(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              animeInfo.isEmpty ? Text('') : 
+                              Text(animeInfo[0][1], 
+                                  style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18,
+                                  color: Colors.black,
+                                ),
+                                textAlign: TextAlign.left
+                              ),
+                              SizedBox(
+                                height: 10.0,
+                              ),
+                              animeInfo.isEmpty ? Text('') : 
+                              animeInfo[0][5] == null ? Text('Studio: -', 
+                                  style: TextStyle(
+                                  fontWeight: FontWeight.normal,
+                                  fontSize: 16,
+                                  color: Colors.black,
+                                ),
+                                textAlign: TextAlign.left
+                              ) : 
+                              Text('Studio: '+animeInfo[0][5], 
                                 style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
-                                color: Colors.black,
+                                  fontWeight: FontWeight.normal,
+                                  fontSize: 16,
+                                  color: Colors.black,
+                                ),
+                                textAlign: TextAlign.left
                               ),
-                              textAlign: TextAlign.left
-                            ),
-                            SizedBox(
-                              height: 10.0,
-                            ),
-                            animeInfo.isEmpty ? Text('') : 
-                            animeInfo[0][5] == null ? Text('Studio: -', 
-                                style: TextStyle(
-                                fontWeight: FontWeight.normal,
-                                fontSize: 16,
-                                color: Colors.black,
+                              animeInfo.isEmpty ? Text('') : 
+                              animeInfo[0][7] == null ? Text('Type: -', 
+                                  style: TextStyle(
+                                  fontWeight: FontWeight.normal,
+                                  fontSize: 16,
+                                  color: Colors.black,
+                                ),
+                                textAlign: TextAlign.left
+                              ) : 
+                              Text('Type: '+animeInfo[0][7], 
+                                  style: TextStyle(
+                                  fontWeight: FontWeight.normal,
+                                  fontSize: 16,
+                                  color: Colors.black,
+                                ),
+                                textAlign: TextAlign.left
                               ),
-                              textAlign: TextAlign.left
-                            ) : 
-                            Text('Studio: '+animeInfo[0][5], 
-                              style: TextStyle(
-                                fontWeight: FontWeight.normal,
-                                fontSize: 16,
-                                color: Colors.black,
+                              animeInfo.isEmpty ? Text('') : 
+                              animeInfo[0][2] == null ? 
+                              Text('Episodes: -', 
+                                  style: TextStyle(
+                                  fontWeight: FontWeight.normal,
+                                  fontSize: 16,
+                                  color: Colors.black,
+                                ),
+                                textAlign: TextAlign.left
+                              ) : 
+                              Text('Episodes: '+animeInfo[0][2].toString(), 
+                                  style: TextStyle(
+                                  fontWeight: FontWeight.normal,
+                                  fontSize: 16,
+                                  color: Colors.black,
+                                ),
+                                textAlign: TextAlign.left
                               ),
-                              textAlign: TextAlign.left
-                            ),
-                            animeInfo.isEmpty ? Text('') : 
-                            animeInfo[0][7] == null ? Text('Type: -', 
-                                style: TextStyle(
-                                fontWeight: FontWeight.normal,
-                                fontSize: 16,
-                                color: Colors.black,
+                              Text(animeInfo.isEmpty ? "":'Licensor: '+ (lcAnimeList.isEmpty ? "-": lcAnimeList[0]['licensor'] == 0 ? "-" : lcAnimeList[0]['licensor']), 
+                                  style: TextStyle(
+                                  fontWeight: FontWeight.normal,
+                                  fontSize: 16,
+                                  color: Colors.black,
+                                ),
+                                textAlign: TextAlign.left
                               ),
-                              textAlign: TextAlign.left
-                            ) : 
-                            Text('Type: '+animeInfo[0][7], 
-                                style: TextStyle(
-                                fontWeight: FontWeight.normal,
-                                fontSize: 16,
-                                color: Colors.black,
+                            ],
+                          ),
+                        ),
+                        Expanded(
+                          flex: 5,
+                          child: Text(''),
+                        ),
+                      ],
+                    ),
+                    SizedBox(
+                      height: 25.0,
+                    ),
+                    Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Expanded(
+                          flex: 5,
+                          child: Text(''),
+                        ),
+                        Expanded(
+                          flex: 90,
+                          child: animeInfo.isEmpty ? Text('') :
+                            ReadMoreText(
+                                animeInfo[0][6],
+                                trimLines: 5,
+                                colorClickableText: Colors.blue,
+                                trimMode: TrimMode.Line,
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.normal, color: Colors.black),
+                                moreStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.blue),
+                                lessStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.blue),
                               ),
-                              textAlign: TextAlign.left
-                            ),
-                            animeInfo.isEmpty ? Text('') : 
-                            animeInfo[0][2] == null ? 
-                            Text('Episodes: -', 
-                                style: TextStyle(
-                                fontWeight: FontWeight.normal,
-                                fontSize: 16,
-                                color: Colors.black,
+                              
+                        ),
+                        Expanded(
+                          flex: 5,
+                          child: Text(''),
+                        ),
+                      ],
+                    ),
+                    SizedBox(
+                      height: 10.0,
+                    ),
+                    availableLicensors.isEmpty ? Row():Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Expanded(
+                          flex: 5,
+                          child: Row(),
+                        ),
+                        Expanded(
+                          flex: 90,
+                          child: animeInfo.isEmpty ? Row() : 
+                              Text('Streaming services', 
+                                  style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color: Colors.black,
+                                ),
+                                textAlign: TextAlign.left
                               ),
-                              textAlign: TextAlign.left
-                            ) : 
-                            Text('Episodes: '+animeInfo[0][2].toString(), 
-                                style: TextStyle(
-                                fontWeight: FontWeight.normal,
-                                fontSize: 16,
-                                color: Colors.black,
-                              ),
-                              textAlign: TextAlign.left
-                            ),
-                            Text(animeInfo.isEmpty ? "":'Licensor: '+ (lcAnimeList.isEmpty ? "-": lcAnimeList[0]['licensor'] == 0 ? "-" : lcAnimeList[0]['licensor']), 
-                                style: TextStyle(
-                                fontWeight: FontWeight.normal,
-                                fontSize: 16,
-                                color: Colors.black,
-                              ),
-                              textAlign: TextAlign.left
-                            ),
-                          ],
+                        ),
+                        Expanded(
+                          flex: 5,
+                          child: Text(''),
+                        ),
+                      ],
+                    ),
+                    animeInfo.isEmpty ?                   
+                    Row() : 
+                      availableLicensors.isEmpty ? 
+                      Row() : 
+                      Container(
+                        child: Column(
+                          children: _buildButtonsWithNames(),
                         ),
                       ),
-                      Expanded(
-                        flex: 5,
-                        child: Text(''),
-                      ),
-                    ],
-                  ),
-                  SizedBox(
-                    height: 25.0,
-                  ),
-                  Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Expanded(
-                        flex: 5,
-                        child: Text(''),
-                      ),
-                      Expanded(
-                        flex: 90,
-                        child: animeInfo.isEmpty ? Text('') :
-                          ReadMoreText(
-                              animeInfo[0][6],
-                              trimLines: 5,
-                              colorClickableText: Colors.blue,
-                              trimMode: TrimMode.Line,
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.normal, color: Colors.black),
-                              moreStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.blue),
-                              lessStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.blue),
-                            ),
-                            
-                      ),
-                      Expanded(
-                        flex: 5,
-                        child: Text(''),
-                      ),
-                    ],
-                  ),
-                  SizedBox(
-                    height: 10.0,
-                  ),
-                  availableLicensors.isEmpty ? Row():Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Expanded(
-                        flex: 5,
-                        child: Row(),
-                      ),
-                      Expanded(
-                        flex: 90,
-                        child: animeInfo.isEmpty ? Row() : 
-                            Text('Streaming services', 
-                                style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                                color: Colors.black,
-                              ),
-                              textAlign: TextAlign.left
-                            ),
-                      ),
-                      Expanded(
-                        flex: 5,
-                        child: Text(''),
-                      ),
-                    ],
-                  ),
-                  animeInfo.isEmpty ?                   
-                  Row() : 
-                    availableLicensors.isEmpty ? 
-                    Row() : 
-                    Container(
-                      child: Column(
-                        children: _buildButtonsWithNames(),
-                      ),
+                    SizedBox(
+                      height: 10.0,
                     ),
-                  SizedBox(
-                    height: 10.0,
-                  ),
-                  Row(
+                    Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Expanded(
+                          flex: 5,
+                          child: Text(''),
+                        ),
+                        Expanded(
+                          flex: 90,
+                          child: animeInfo.isEmpty ? Row() : 
+                              Text('More info', 
+                                  style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color: Colors.black,
+                                ),
+                                textAlign: TextAlign.left
+                              ),
+                        ),
+                        Expanded(
+                          flex: 5,
+                          child: Row(),
+                        ),
+                      ],
+                    ),
+
+                    Row(
                       mainAxisAlignment: MainAxisAlignment.start,
                       crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Expanded(
-                        flex: 5,
-                        child: Text(''),
-                      ),
-                      Expanded(
-                        flex: 90,
-                        child: animeInfo.isEmpty ? Row() : 
-                            Text('More info', 
-                                style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                                color: Colors.black,
-                              ),
-                              textAlign: TextAlign.left
+                      children: <Widget>[
+                        Expanded(
+                          flex: 5,
+                          child: Row(),
+                        ),
+                        Expanded(
+                          flex: 44,
+                          child: animeInfo.isEmpty ? Text('') : 
+                            new ElevatedButton(
+                              onPressed: () => openBrowser("https://myanimelist.net/anime/"+animeInfo[0][3].toString()),
+                              child: Text("MyAnimeList"),
                             ),
-                      ),
-                      Expanded(
-                        flex: 5,
-                        child: Row(),
-                      ),
-                    ],
-                  ),
+                        ),
+                        Expanded(
+                          flex: 2,
+                          child: Text(''),
+                        ),
+                        Expanded(
+                          flex: 44,
+                          child: animeInfo.isEmpty ? Text('') : 
+                            new ElevatedButton(
+                              onPressed: () => openBrowser("https://anilist.co/anime/"+animeInfo[0][0].toString()),
+                              child: Text("AniList"),
+                            ),
+                        ),
+                        Expanded(
+                          flex: 5,
+                          child: Text(''),
+                        ),
+                      ],
+                    ),
+                    
+                    SizedBox(
+                      height: 25.0,
+                    ),              
 
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Expanded(
-                        flex: 5,
-                        child: Row(),
-                      ),
-                      Expanded(
-                        flex: 44,
-                        child: animeInfo.isEmpty ? Text('') : 
-                          new ElevatedButton(
-                            onPressed: () => openBrowser("https://myanimelist.net/anime/"+animeInfo[0][3].toString()),
-                            child: Text("MyAnimeList"),
-                          ),
-                      ),
-                      Expanded(
-                        flex: 2,
-                        child: Text(''),
-                      ),
-                      Expanded(
-                        flex: 44,
-                        child: animeInfo.isEmpty ? Text('') : 
-                          new ElevatedButton(
-                            onPressed: () => openBrowser("https://anilist.co/anime/"+animeInfo[0][0].toString()),
-                            child: Text("AniList"),
-                          ),
-                      ),
-                      Expanded(
-                        flex: 5,
-                        child: Text(''),
-                      ),
-                    ],
-                  ),
-                  
-                  SizedBox(
-                    height: 25.0,
-                  ),              
-                  _loading
-                  ? Container(
-                      child: Center(
-                        child: CircularProgressIndicator(valueColor: new AlwaysStoppedAnimation<Color>(Colors.blue)),
-                    ))
-                  : Container(),
-                ],
-              ),      
-
+                  ],
+                ),                    
+              ),
+              _loading
+              ? Container(
+                  child: Center(
+                    child: CircularProgressIndicator(valueColor: new AlwaysStoppedAnimation<Color>(Colors.blue)),
+                ))
+              : Container(),      
             ],
           ),
-        ),
-        
+      ),
       );
   }
 }
