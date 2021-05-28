@@ -18,10 +18,22 @@ class _RetryPageState extends State<RetryPage> {
   Widget build(BuildContext context) {
     return 
       Scaffold(
+        backgroundColor: Colors.grey[900],
         body: Center(
             child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
+                  Text('Connection Error', 
+                      style: TextStyle(
+                      fontWeight: FontWeight.normal,
+                      fontSize: 20,
+                      color: Colors.red,
+                    ),
+                    textAlign: TextAlign.left
+                  ),
+                  SizedBox(
+                    height: 50.0,
+                  ),
                   TextButton(
                     onPressed: (){
                       Navigator.pushReplacement(
@@ -38,18 +50,18 @@ class _RetryPageState extends State<RetryPage> {
                       ],
                     ),
                   ),
-                  TextButton(
-                    child: Text(
-                      'Skip login',
-                      style: TextStyle(color: Colors.black54),
-                    ),
-                    onPressed: () {
-                      Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => MyApp()),
-                    );
-                    },
-                  ),
+                  // TextButton(
+                  //   child: Text(
+                  //     'Skip login',
+                  //     style: TextStyle(color: Colors.black54),
+                  //   ),
+                  //   onPressed: () {
+                  //     Navigator.pushReplacement(
+                  //     context,
+                  //     MaterialPageRoute(builder: (context) => MyApp()),
+                  //   );
+                  //   },
+                  // ),
                 ],
                 
             )

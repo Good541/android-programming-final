@@ -281,6 +281,7 @@ class _ProfileState extends State<Profile> {
     Widget build(BuildContext context) {
         return MaterialApp(
         home: Scaffold(
+          resizeToAvoidBottomInset: false,
           appBar: AppBar(
               title: Text('My account'),
           ),

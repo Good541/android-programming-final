@@ -38,6 +38,7 @@ class _AddState extends State<Add> {
     return TextField(
       controller: _searchQueryController,
       autofocus: true,
+      cursorColor: Colors.white,
       decoration: InputDecoration(
         hintText: "Search anime...",
         border: InputBorder.none,
@@ -1296,8 +1297,9 @@ class _AddState extends State<Add> {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
+        resizeToAvoidBottomInset: false,
         appBar: AppBar(
-          leading: _isSearching ? const BackButton() : null,
+          leading: _isSearching ? BackButton(onPressed: () => Navigator.of(context, rootNavigator: false).pop()) : null,
           title: _isSearching ? _buildSearchField() : Text('Add anime'),
           actions: _buildActions(),
         ),

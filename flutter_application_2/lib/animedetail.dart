@@ -268,6 +268,7 @@ class _AnimeDetailState extends State<AnimeDetail> {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
+        resizeToAvoidBottomInset: false,
         appBar: AppBar(
           leading: BackButton(),
           title: animeInfo.isEmpty ? Text('Loading...') : Text(animeInfo[0][1]),

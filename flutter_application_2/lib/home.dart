@@ -640,6 +640,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
       home: DefaultTabController(
         length: 5,
         child: Scaffold(
+          resizeToAvoidBottomInset: false,
             appBar: AppBar(
               bottom: TabBar(
                 tabs: [

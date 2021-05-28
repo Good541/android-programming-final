@@ -178,7 +178,7 @@ class _LoginState extends State<Login> {
             SizedBox(height: 24.0),
             loginButton,
             registerLabel,
-            skipLoginLabel,
+            //skipLoginLabel,
           ],
         ),
       ),
