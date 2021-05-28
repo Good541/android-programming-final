@@ -691,14 +691,16 @@ class _ScheduleState extends State<Schedule> {
                                         ),
                                         Align(
                                             alignment: Alignment.centerLeft,
-                                            child: ReadMoreText(
-                                                    today[index][6],
-                                                    trimLines: 3,
-                                                    trimMode: TrimMode.Line,
-                                                    trimCollapsedText: ' ',
-                                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black),
-                                                    
-                                                  ),
+                                            child: Text(today[index][6], 
+                                                      style: TextStyle(
+                                                        fontWeight: FontWeight.bold,
+                                                        fontSize: 16,
+                                                        color: Colors.black,
+                                                      ),
+                                                      overflow: TextOverflow.ellipsis,
+                                                      maxLines: 3,
+                                                      textAlign: TextAlign.left
+                                          ),
                                         ),
                                         SizedBox(
                                           height: 15.0,
@@ -809,13 +811,15 @@ class _ScheduleState extends State<Schedule> {
                                               ), 
                                               Align(
                                                   alignment: Alignment.centerLeft,
-                                                  child: ReadMoreText(
-                                                    tomorrow[index][6],
-                                                    trimLines: 3,
-                                                    trimMode: TrimMode.Line,
-                                                    trimCollapsedText: ' ',
-                                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black),
-                                                    
+                                                  child: Text(tomorrow[index][6], 
+                                                      style: TextStyle(
+                                                        fontWeight: FontWeight.bold,
+                                                        fontSize: 16,
+                                                        color: Colors.black,
+                                                      ),
+                                                      overflow: TextOverflow.ellipsis,
+                                                      maxLines: 3,
+                                                      textAlign: TextAlign.left
                                                   ),
                                               ),
                                               SizedBox(

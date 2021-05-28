@@ -30,6 +30,7 @@ class _AddState extends State<Add> {
   List mediaformat = ['TV', 'TV_SHORT', 'MOVIE', 'SPECIAL', 'OVA', 'ONA'];
   List mediaStatus = ['FINISHED', 'RELEASING', 'NOT_YET_RELEASED'];
   List mediaSeson = ['WINTER', 'SPRING', 'SUMMER', 'FALL'];
+  List mediaSort = ['SCORE_DESC'];
   int fetchPage;
   String queryState = "initdata";
   List currentFilter;
@@ -131,10 +132,11 @@ class _AddState extends State<Add> {
         'perPage': 20,
         'isAdult': false,
         'countryOfOrigin': 'JP',
-        'format_in': mediaformat
+        'format_in': mediaformat,
+        'sort': mediaSort
       };
       String query =
-          '''query (\$id: Int, \$page: Int, \$perPage: Int, \$season: MediaSeason, \$seasonYear:Int, \$isAdult:Boolean, \$countryOfOrigin:CountryCode, \$format_in:[MediaFormat]) {
+          '''query (\$id: Int, \$page: Int, \$perPage: Int, \$season: MediaSeason, \$seasonYear:Int, \$isAdult:Boolean, \$countryOfOrigin:CountryCode, \$format_in:[MediaFormat], \$sort:[MediaSort]) {
                     Page (page: \$page, perPage: \$perPage) {
                         pageInfo {
                             total
@@ -143,7 +145,7 @@ class _AddState extends State<Add> {
                             hasNextPage
                             perPage
                         }
-                        media (id: \$id, season: \$season, seasonYear:\$seasonYear, isAdult:\$isAdult, countryOfOrigin:\$countryOfOrigin, format_in:\$format_in, type: ANIME) {
+                        media (id: \$id, season: \$season, seasonYear:\$seasonYear, isAdult:\$isAdult, countryOfOrigin:\$countryOfOrigin, format_in:\$format_in, sort:\$sort, type: ANIME) {
                             id
                             idMal
                             episodes
@@ -205,10 +207,11 @@ class _AddState extends State<Add> {
         'perPage': 20,
         'isAdult': false,
         'countryOfOrigin': 'JP',
-        'format_in': mediaformat
+        'format_in': mediaformat,
+        'sort': mediaSort
       };
       String query =
-          '''query (\$id: Int, \$page: Int, \$perPage: Int, \$season: MediaSeason, \$seasonYear:Int, \$isAdult:Boolean, \$countryOfOrigin:CountryCode, \$format_in:[MediaFormat]) {
+          '''query (\$id: Int, \$page: Int, \$perPage: Int, \$season: MediaSeason, \$seasonYear:Int, \$isAdult:Boolean, \$countryOfOrigin:CountryCode, \$format_in:[MediaFormat], \$sort:[MediaSort]) {
                     Page (page: \$page, perPage: \$perPage) {
                         pageInfo {
                             total
@@ -217,7 +220,7 @@ class _AddState extends State<Add> {
                             hasNextPage
                             perPage
                         }
-                        media (id: \$id, season: \$season, seasonYear:\$seasonYear, isAdult:\$isAdult, countryOfOrigin:\$countryOfOrigin, format_in:\$format_in, type: ANIME) {
+                        media (id: \$id, season: \$season, seasonYear:\$seasonYear, isAdult:\$isAdult, countryOfOrigin:\$countryOfOrigin, format_in:\$format_in, sort:\$sort, type: ANIME) {
                             id
                             idMal
                             episodes
@@ -279,10 +282,11 @@ class _AddState extends State<Add> {
         'perPage': 20,
         'isAdult': false,
         'countryOfOrigin': 'JP',
-        'format_in': mediaformat
+        'format_in': mediaformat,
+        'sort': mediaSort
       };
       String query =
-          '''query (\$page: Int, \$perPage: Int, \$search: String, \$isAdult:Boolean, \$countryOfOrigin:CountryCode, \$format_in:[MediaFormat]) {
+          '''query (\$page: Int, \$perPage: Int, \$search: String, \$isAdult:Boolean, \$countryOfOrigin:CountryCode, \$format_in:[MediaFormat], \$sort:[MediaSort]) {
                     Page (page: \$page, perPage: \$perPage) {
                         pageInfo {
                             total
@@ -291,7 +295,7 @@ class _AddState extends State<Add> {
                             hasNextPage
                             perPage
                         }
-                        media (search:\$search, isAdult:\$isAdult, countryOfOrigin:\$countryOfOrigin, format_in:\$format_in, type: ANIME) {
+                        media (search:\$search, isAdult:\$isAdult, countryOfOrigin:\$countryOfOrigin, format_in:\$format_in, sort:\$sort, type: ANIME) {
                             id
                             idMal
                             episodes
@@ -351,10 +355,11 @@ class _AddState extends State<Add> {
         'perPage': 20,
         'isAdult': false,
         'countryOfOrigin': 'JP',
-        'format_in': mediaformat
+        'format_in': mediaformat,
+        'sort': mediaSort
       };
       String query =
-          '''query (\$page: Int, \$perPage: Int, \$search: String, \$isAdult:Boolean, \$countryOfOrigin:CountryCode, \$format_in:[MediaFormat]) {
+          '''query (\$page: Int, \$perPage: Int, \$search: String, \$isAdult:Boolean, \$countryOfOrigin:CountryCode, \$format_in:[MediaFormat], \$sort:[MediaSort]) {
                     Page (page: \$page, perPage: \$perPage) {
                         pageInfo {
                             total
@@ -363,7 +368,7 @@ class _AddState extends State<Add> {
                             hasNextPage
                             perPage
                         }
-                        media (search:\$search, isAdult:\$isAdult, countryOfOrigin:\$countryOfOrigin, format_in:\$format_in type: ANIME) {
+                        media (search:\$search, isAdult:\$isAdult, countryOfOrigin:\$countryOfOrigin, format_in:\$format_in, sort:\$sort, type: ANIME) {
                             id
                             idMal
                             episodes
@@ -1342,14 +1347,16 @@ class _AddState extends State<Add> {
                                   ),                                   
                                   Align(
                                     alignment: Alignment.topLeft,
-                                    child: ReadMoreText(
-                                                    animeList[index][1],
-                                                    trimLines: 3,
-                                                    trimMode: TrimMode.Line,
-                                                    trimCollapsedText: ' ',
-                                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black),
-                                                    
-                                                  ),
+                                    child: Text(animeList[index][1], 
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 16,
+                                                  color: Colors.black,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                                maxLines: 3,
+                                                textAlign: TextAlign.left
+                                    ),
                                   ),
                                   SizedBox(
                                     height: 10.0,

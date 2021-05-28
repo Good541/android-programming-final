@@ -270,7 +270,7 @@ class _AnimeDetailState extends State<AnimeDetail> {
       home: Scaffold(
         resizeToAvoidBottomInset: false,
         appBar: AppBar(
-          leading: BackButton(),
+          leading: BackButton(onPressed: () => Navigator.of(context, rootNavigator: false).pop()),
           title: animeInfo.isEmpty ? Text('Loading...') : Text(animeInfo[0][1]),
         ),
         body: Stack(
@@ -279,6 +279,36 @@ class _AnimeDetailState extends State<AnimeDetail> {
               child:
                 Column(
                   children: [
+                    SizedBox(
+                      height: 25.0,
+                    ),
+                                                  
+                    Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Expanded(
+                          flex: 5,
+                          child: Text(''),
+                        ),
+                        Expanded(
+                          flex: 90,
+                          child: animeInfo.isEmpty ? Text('') : 
+                              Text(animeInfo[0][1], 
+                                  style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 20,
+                                  color: Colors.black,
+                                ),
+                                textAlign: TextAlign.left
+                              ),
+                        ),
+                        Expanded(
+                          flex: 5,
+                          child: Text(''),
+                        ),
+                      ],
+                    ),
                     SizedBox(
                       height: 10.0,
                     ),
@@ -292,11 +322,13 @@ class _AnimeDetailState extends State<AnimeDetail> {
                         ),
                         Expanded(
                           flex: 28,
-                          child: animeInfo.isEmpty ? Text('') : animeInfo == null ? Text('') : //Image.network(animeInfo[0][4]),
-                                                                                              FadeInImage.memoryNetwork(
-                                                                                                placeholder: kTransparentImage,
-                                                                                                image: animeInfo[0][4],
-                                                                                              ),
+                          child: animeInfo.isEmpty ? Text('') : 
+                              animeInfo == null ? 
+                              Text('') : //Image.network(animeInfo[0][4]),
+                              FadeInImage.memoryNetwork(
+                                placeholder: kTransparentImage,
+                                image: animeInfo[0][4],
+                              ),
                         ),
                         Expanded(
                           flex: 4,
@@ -308,18 +340,7 @@ class _AnimeDetailState extends State<AnimeDetail> {
                             mainAxisAlignment: MainAxisAlignment.start,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              animeInfo.isEmpty ? Text('') : 
-                              Text(animeInfo[0][1], 
-                                  style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 18,
-                                  color: Colors.black,
-                                ),
-                                textAlign: TextAlign.left
-                              ),
-                              SizedBox(
-                                height: 10.0,
-                              ),
+
                               animeInfo.isEmpty ? Text('') : 
                               animeInfo[0][5] == null ? Text('Studio: -', 
                                   style: TextStyle(

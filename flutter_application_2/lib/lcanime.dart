@@ -1057,13 +1057,15 @@ class _LicensedAnimeState extends State<LicensedAnime> {
                                   ),
                                   Align(
                                     alignment: Alignment.topLeft,
-                                    child: ReadMoreText(
-                                      lcAnimeList[index]['romaji'] ,
-                                      trimLines: 3,
-                                      trimMode: TrimMode.Line,
-                                      trimCollapsedText: ' ',
-                                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black),
-                                      
+                                    child: Text(lcAnimeList[index]['romaji'], 
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 16,
+                                                  color: Colors.black,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                                maxLines: 3,
+                                                textAlign: TextAlign.left
                                     ),
                                     
                                   ),

@@ -259,13 +259,16 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                         ),
                         Align(
                           alignment: Alignment.centerLeft,
-                          child: ReadMoreText(filterList[index]['romaji'],
-                                              trimLines: 3,
-                                              trimMode: TrimMode.Line,
-                                              trimCollapsedText: ' ',
-                                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black),
-                                              
-                                            ),
+                          child: Text(filterList[index]['romaji'], 
+                                  style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color: Colors.black,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 3,
+                                textAlign: TextAlign.left
+                              ),
                         ),
                         SizedBox(
                           height: 10.0,
@@ -398,7 +401,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                         Align(
                           alignment: Alignment.centerLeft,
                           child: ReadMoreText(myList[index]['romaji'],
-                                              trimLines: 3,
+                                              trimLines: 2,
                                               trimMode: TrimMode.Line,
                                               trimCollapsedText: ' ',
                                               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black),
