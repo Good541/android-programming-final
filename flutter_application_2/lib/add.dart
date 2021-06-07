@@ -431,7 +431,9 @@ class _AddState extends State<Add> {
       Map variables = {
         'page': fetchPage,
         'perPage': 20,
-        'isAdult': false
+        'isAdult': false,
+        'countryOfOrigin': 'JP',
+        'sort': mediaSort
       };
       String filterQueryStr = '''''';
       String filterMediaStr = '''''';
@@ -464,7 +466,7 @@ class _AddState extends State<Add> {
         return "You must select at least 1 filter";
       }
       String query =
-          '''query (\$page: Int, \$perPage: Int, \$isAdult:Boolean '''+filterQueryStr+''') {
+          '''query (\$page: Int, \$perPage: Int, \$isAdult:Boolean, \$countryOfOrigin:CountryCode, \$sort:[MediaSort] '''+filterQueryStr+''') {
                     Page (page: \$page, perPage: \$perPage) {
                         pageInfo {
                             total
@@ -473,7 +475,7 @@ class _AddState extends State<Add> {
                             hasNextPage
                             perPage
                         }
-                        media (isAdult:\$isAdult, type: ANIME'''+filterMediaStr+''') {
+                        media (isAdult:\$isAdult, countryOfOrigin:\$countryOfOrigin, sort:\$sort, type: ANIME'''+filterMediaStr+''') {
                             id
                             idMal
                             episodes
@@ -529,7 +531,9 @@ class _AddState extends State<Add> {
       Map variables = {
         'page': page,
         'perPage': 20,
-        'isAdult': false
+        'isAdult': false,
+        'countryOfOrigin': 'JP',
+        'sort': mediaSort
       };
       String filterQueryStr = '''''';
       String filterMediaStr = '''''';
@@ -562,7 +566,7 @@ class _AddState extends State<Add> {
         return "You must select at least 1 filter";
       }
       String query =
-          '''query (\$page: Int, \$perPage: Int, \$isAdult:Boolean '''+filterQueryStr+''') {
+          '''query (\$page: Int, \$perPage: Int, \$isAdult:Boolean, \$countryOfOrigin:CountryCode, \$sort:[MediaSort] '''+filterQueryStr+''') {
                     Page (page: \$page, perPage: \$perPage) {
                         pageInfo {
                             total
@@ -571,7 +575,7 @@ class _AddState extends State<Add> {
                             hasNextPage
                             perPage
                         }
-                        media (isAdult:\$isAdult, type: ANIME'''+filterMediaStr+''') {
+                        media (isAdult:\$isAdult, countryOfOrigin:\$countryOfOrigin, sort:\$sort, type: ANIME'''+filterMediaStr+''') {
                             id
                             idMal
                             episodes

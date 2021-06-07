@@ -84,7 +84,6 @@ def login():
     # if content['uname'] == None or content['pwd'] == None:
     #     return "Username and password can't be black"
     remember = BooleanField(content['rememberme'])
-    print(content)
     for x in FORBIDDEN_STRING:
         if content['uname'].find(x) > -1:
             warning = 'Username must not contain spacebar and any of the follow characters: \", \\, /, :, ?, *, <, >, |'
@@ -93,10 +92,8 @@ def login():
     if user:
         if check_password_hash(user.pwd, content['pwd']):
             login_user(user,  remember=form.remember.data)
-            print("Successful")
             return "Login successful"
     warning = 'Username or password is incorrect'
-    print(warning)
     return warning
 
 @app.route('/signup', methods=['POST'])
@@ -130,7 +127,6 @@ def signup():
     new_user = Userdata(uid=newuseruid, uname=content['uname'], pwd=hashed_password)
     db.session.add(new_user)
     db.session.commit()
-    print("suc")
     return 'Register successful'
 
 @app.route('/changepassword', methods=['POST'])
@@ -139,14 +135,12 @@ def changepassword():
     content = request.get_json(silent=True)
     if len(content['newpwd']) < 5:
         return 'Username and password must contain 5 character or more'
-    print(content)
     if check_password_hash(current_user.pwd, content['oldpwd']):
         hashed_password = generate_password_hash(content['newpwd'], method='sha256')
         changepwd = Managedb()
         changepwd.updateuserpassword(current_user.uid, hashed_password)
         return "Change password successful"
     warning = 'Old password is incorrect'
-    print(warning)
     return warning
 
 @app.route('/logout')
@@ -163,19 +157,27 @@ def userdata():
 @app.route('/getuseravatar', methods = ['GET'])
 @login_required
 def getuseravatar():
-    return send_file(
+    image = 0
+    try:
+        image = send_file(
     USER_AVATAR_PATH+current_user.uname+".jpg",
     as_attachment=True,
     attachment_filename='test.jpg',
-    mimetype='image/jpeg'
- )
+    mimetype='image/jpeg')
+    except:
+        image = send_file(
+    USER_AVATAR_PATH+"default-user-image.png",
+    as_attachment=True,
+    attachment_filename='test.jpg',
+    mimetype='image/png')
+    return image
+ 
     # send_file(USER_AVATAR_PATH+current_user.uname+".jpg", mimetype='image/jpg')
 
 @app.route('/updateanimelist', methods = ['POST'])
 @login_required
 def updateanimelist():
     content = request.get_json(silent=True)
-    print(content)
     updateanimelist = Managedb()
     updateanimelist.updatedb(content, current_user.uid)
     
@@ -187,7 +189,6 @@ def updateanimelist():
 def deleteanimelist():
     # if request.method == 'POST':
     content = request.get_json(silent=True)
-    print(content)
     updateanimelist = Managedb()
     updateanimelist.deletedb(content, current_user.uid)
 
@@ -196,15 +197,11 @@ def deleteanimelist():
 @app.route('/getanimelist', methods = ['GET'])
 @login_required
 def getanimelist():
-    # if request.method == 'POST':
     getnaimelist = Managedb()
-    print(getnaimelist.readdb(current_user.uid))
     
     df = pd.DataFrame(getnaimelist.readdb(current_user.uid), columns=['listid','uid','anilistid','malid','status','episode','rating','romaji', 'imgurl', 'totaleps'])
     df = df.sort_values(by=['romaji'], ascending=True)
     json = df.to_dict('records')
-    print(type(json))
-
     
     return jsonify(json)
 
@@ -222,7 +219,6 @@ def addanime():
 
 @app.route('/getlclist', methods = ['POST'])
 def getlclist():
-    # if request.method == 'POST':
     content = request.get_json(silent=True)
     firstIndex = content['page'] * content['perPage'] - content['perPage']
     lastIndex = firstIndex + content['perPage'] - 1
@@ -246,19 +242,16 @@ def getlclist():
     df = df.loc[firstIndex:lastIndex]
 
     json = df.to_dict('records')
-    print(type(json))
 
     return jsonify(json)
 
 @app.route('/getlcbyid', methods = ['POST'])
 def getlcbyid():
-    # if request.method == 'POST':
+
     content = request.get_json(silent=True)
-    # firstIndex = content['page'] * content['perPage'] - content['perPage']
-    # lastIndex = firstIndex + content['perPage'] - 1
     content = {k: v for k, v in content.items() if v is not None}
+
     getnaimelist = Managedb()
-    
     df = pd.DataFrame(getnaimelist.readlcbyid(content['anilistid']), 
     columns = ['animelicenseid','anilistid','romaji',
     'season','year','format', 'imgurl','licensor','musethyt',
@@ -269,20 +262,12 @@ def getlcbyid():
     df = df.sort_values(by=['year'], ascending=True, ignore_index=True)
     df = df.fillna(0)
 
-    # if len(df.index) - 1 < firstIndex:
-    #     return "Page ended"
-    # if(len(df.index) - 1 < lastIndex):
-    #     lastIndex = len(df.index) - 1
-    # df = df.loc[firstIndex:lastIndex]
-
     json = df.to_dict('records')
-    print(type(json))
 
     return jsonify(json)
 
 @app.route('/searchlclist', methods = ['POST'])
 def searchlclist():
-    # if request.method == 'POST':
     content = request.get_json(silent=True)
     try:
         print(content['search'])
@@ -319,7 +304,6 @@ def searchlclist():
     df = df.loc[firstIndex:lastIndex]
 
     json = df.to_dict('records')
-    print(type(json))
 
     return jsonify(json)
 
@@ -345,19 +329,12 @@ def filterlclist():
      'bilibili', 'aisplay','netflix','anioneyt',
      'iqiyi','flixer','wetv','trueid', 'viu','pops', 'linetv',
       'amazon', 'iflix'])
-    # print(df)
     if content['streaming'] != None:
-        print("streaminggggggggggg")
-        print(content['streaming'])
         df = df.loc[df[content['streaming']] == 1]
         del content['streaming']
     content = {k: v for k, v in content.items() if v is not None}
     df = df.loc[(df[list(content)] == pd.Series(content)).all(axis=1)]
-    # print(df)
     df = df.reset_index(drop=False)
-    print(df)
-    print(firstIndex)
-    print(lastIndex)
 
     if len(df.index) - 1 < firstIndex:
         return "Page ended"

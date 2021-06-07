@@ -1,5 +1,5 @@
 class RequestURL{
-  final String apiURL = "http://shirakami.trueddns.com:60181";
+  final String apiURL = "http://192.168.1.57:8000";
   final String anilistURL = "https://graphql.anilist.co";
 
   RequestURL();
